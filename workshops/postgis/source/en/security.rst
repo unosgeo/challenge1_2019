@@ -37,7 +37,7 @@ Read-only Users
 
 Our read-only user will be for a web application to use to query the ``nyc_streets`` table.
 
-The application will have specific access to the ``nyc_streets`` table, but will inherit the necessary system access for PostGIS operations from the ``postgis_reader`` role.
+The application will have specific access to the ``nyc_streets`` table, but will also inherit the necessary system access for PostGIS operations from the ``postgis_reader`` role.
 
 .. code-block:: sql
 
@@ -51,11 +51,13 @@ The application will have specific access to the ``nyc_streets`` table, but will
   -- Give that role to the web app
   GRANT postgis_reader TO app1;
 
-Now, use the psql commandline to login as as app1:
+Now, use the psql command line to login as as app1:
 
   :: 
      
     psql -d nyc -U app1
+    
+Try the following queries:
 
 .. code-block:: sql
 
@@ -68,7 +70,7 @@ Now, use the psql commandline to login as as app1:
 
 :: 
 
-The ``INHERIT`` clause granted postgis_reader with the granted privilegedges that all the roles in the database have. Now we have a nice generic ``postgis_reader`` role we can apply to any user that need to read from PostGIS tables.
+The ``INHERIT`` clause granted postgis_reader with the privilegedges that all the roles in the database have. Now we have a nice generic ``postgis_reader`` role we can apply to any user that need to read from PostGIS tables.
 
 
 Read/write Users
@@ -112,7 +114,7 @@ Encryption
 
 PostgreSQL provides a lot of `encryption facilities <http://www.postgresql.org/docs/current/static/encryption-options.html>`_, many of them optional, some of them on by default.
 
-* By default, all passwords are MD5 encrypted. The client/server handshake double encrypts the MD5 password to prevent re-use of the hash by anyone who intercepts the password.
+* By default, all passwords are MD5 encrypted. The client/server handshake double encrypts the MD5 password to prevent re-use of the hash by anyone who intercepts the password. It is also possible to use SCRAM which is an Internet standard.
 * `SSL connections <http://www.postgresql.org/docs/current/static/libpq-ssl.html>`_ are optionally available between the client and server, to encrypt all data and login information. SSL certificate authentication is also available when SSL connections are used.
 * Columns inside the database can be encrypted using the pgcrypto_ module, which includes hashing algorithms, direct ciphers (blowfish, aes) and both public key and symmetric PGP encryption.
 
@@ -140,7 +142,7 @@ In order to use SSL connections, both your client and server must support SSL. Y
      
 * Copy the ``server.crt`` and ``server.key`` into the PostgreSQL data directory.
 
-* Enable SSL support in the ``postgresql.conf`` file by turning the "ssl" parameter to "on". In pgAdmin, go to *File > Open ...*, and navigate to ``C:\Documents and Settings\%USER\.opengeo\pgdata\%USER"\postgresql.conf``
+* Enable SSL support in the ``postgresql.conf`` file by turning the "ssl" parameter to "on".
 
   .. image:: ./screenshots/ssl_conf.jpg
 
@@ -172,11 +174,11 @@ Data Encryption
 
 The pgcrypto_ module has a huge range of encryption options, so we will only demonstrate the simplest use case: encrypting a column of data using a symmetric cipher.
 
-* First, enable pgcrypto by loading the contrib SQL file, either in PgAdmin or psql.
+* First, enable pgcrypto by creating the EXTENSION, either in PgAdmin or psql.
 
-  :: 
+.. code-block:: sql
      
-    pgsql/8.4/share/postgresql/contrib/pgcrypto.sql
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 
 * Then, test the encryption function.
