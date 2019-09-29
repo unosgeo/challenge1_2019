@@ -51,40 +51,24 @@ The application will have specific access to the ``nyc_streets`` table, but will
   -- Give that role to the web app
   GRANT postgis_reader TO app1;
 
-Now, when we login as app1, we can select rows from the ``nyc_streets`` table. However, we cannot run an :command:`ST_Transform` call! Why not?
+Now, use the psql commandline to login as as app1:
+
+  :: 
+     
+    psql -d nyc -U app1
 
 .. code-block:: sql
 
   -- This works!
   SELECT * FROM nyc_streets LIMIT 1; 
 
-  -- This doesn't work!
+  -- This works too!
   SELECT ST_AsText(ST_Transform(geom, 4326)) 
     FROM nyc_streets LIMIT 1; 
 
 :: 
 
-  ERROR:  permission denied for relation spatial_ref_sys
-  CONTEXT:  SQL statement "SELECT proj4text FROM spatial_ref_sys WHERE srid = 4326 LIMIT 1"
-
-The answer is contained in the error statement. Though our ``app1`` user can view the contents of the ``nyc_streets`` table fine, it cannot view the contents of ``spatial_ref_sys``, so the call to :command:`ST_Transform` fails. 
-
-So, we need to also grant the ``postgis_reader`` role read access to all the PostGIS metadata tables:
-
-.. code-block:: sql
-
-  GRANT SELECT ON geometry_columns TO postgis_reader;
-  GRANT SELECT ON geography_columns TO postgis_reader;
-  GRANT SELECT ON spatial_ref_sys TO postgis_reader;
-
-Now we have a nice generic ``postgis_reader`` role we can apply to any user that need to read from PostGIS tables.
-
-
-.. code-block:: sql
-
-  -- This works now!
-  SELECT ST_AsText(ST_Transform(geom, 4326)) 
-    FROM nyc_streets LIMIT 1; 
+The ``INHERIT`` clause granted postgis_reader with the granted privilegedges that all the roles in the database have. Now we have a nice generic ``postgis_reader`` role we can apply to any user that need to read from PostGIS tables.
 
 
 Read/write Users
