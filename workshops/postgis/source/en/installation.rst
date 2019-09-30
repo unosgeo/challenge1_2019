@@ -7,16 +7,65 @@ PostGIS is an extension for the PostgreSQL database to deal with spatial data, s
 
 Windows
 -------
-For Windows, there is the EnterpriseDb PostgreSQL distributions: https://www.postgresql.org/download/windows/, an interactive installer that will provide the option of installing PostGIS in an installation dialog with "StackBuilder":
+For Windows, there is the EnterpriseDB PostgreSQL distributions: https://www.postgresql.org/download/windows/, an interactive installer that will provide the option for installing PostGIS in an installation dialog with "Stack Builder":
 
-   .. image:: ./screenshots/install_postgis.png
+#. First install PostgreSQL with the EDB installer:
+
+   .. image:: ./screenshots/windows01.PNG
+   :class: inline
+   
+#. Follow the installation process leaving the directories as they are by default and make sure all components (postgreSQL Server, pgAdmin 4, Stack Builder and Command Line Tools) are selected to install.
+
+   .. image:: ./screenshots/windows03.PNG
+   :class: inline
+   
+#. Set a password that you will use later for login. You may use ``postgres``.
+
+   .. image:: ./screenshots/windows05.PNG
+   :class: inline
+   
+#. Leave the default port to 5432:
+
+   .. image:: ./screenshots/windows06.PNG
+   :class: inline
+   
+#. At the end of the PostgreSQL installation check the option to launch Stack Builder. This will continue to install PostGIS.
+
+   .. image:: ./screenshots/windows09.PNG
      :class: inline
+     
+#. Select the recent PostgreSQL installation:
+
+   .. image:: ./screenshots/windows10.PNG
+     :class: inline
+     
+#. Search for PostGIS under **Spatial Extensions** and check it.
+     
+     .. image:: ./screenshots/windows11.PNG
+     :class: inline
+     
+#. Follow the installation process and click on **I Agree** in the License Agreement step:
+
+     .. image:: ./screenshots/windows14.PNG
+     :class: inline
+     
+#. Choose the PostGIS component:
+
+     .. image:: ./screenshots/windows15.PNG
+     :class: inline
+
+#. Leave the default directories and complete the installation:
+
+     .. image:: ./screenshots/windows20.PNG
+     :class: inline
+
+#. Go to **Start** and look for the PostgreSQL folder where pgAdmin 4 will be located. Open it and set a password to login everytime.
 
 Mac OS X
 --------
 For OSX users it is possile to install PostGIS along with PostgreSQL using the Postgres app: http://postgresapp.com/. This is the easiest way to do the installation but you can also use the EnterpriseDb installer: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads or the homebrew installer if you are familiar with it by running the command: ``brew install postgis``.
 
-The following steps will guide you in the Postgres app installation:
+The following steps will guide you in the installation using Postgres.app:
 
 #. Download the dmg file: https://postgresapp.com/downloads.html.
 
@@ -40,9 +89,9 @@ The following steps will guide you in the Postgres app installation:
    .. image:: ./screenshots/installosx4.png
       :class: inline
    
-Install pgAdmin 4
------------------
-#. Go to: https://www.pgadmin.org/download/ to get pgAdmin 4 for your platform. Double click the installer and agree to the terms by clicking **Agree**.
+Install pgAdmin 4 (Mac OS X)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#. Go to: https://www.pgadmin.org/download/ to get pgAdmin 4 for **Mac OS X**. Double click the installer and agree to the terms by clicking **Agree**.
 
    .. image:: ./screenshots/installpgadmin1.png
      :class: inline
@@ -57,45 +106,4 @@ Install pgAdmin 4
    .. image:: ./screenshots/installpgadmin3.png
       :class: inline
    
-#. pgAdmin 4 is web-based so a window will open in your browser. The first time it will prompt for a master password to use, set one, then enter it to see the servers.
-
-#. OpenGeo Suite is licensed under the GNU GPL, which is reproduced on the licensing page.
-
-   .. image:: ./screenshots/install_license.png
-     :class: inline
-
-
-#. The directory where OpenGeo Suite will reside is the usual ``C:\Program Files\`` (or ``C:\Program Files (x86)``) location. Click **Next**.
-
-   .. image:: ./screenshots/install_directory.png
-     :class: inline
-
-
-#. The installer will create a number of shortcuts in the Boundless folder in the Start Menu. Click **Next**.
-
-   .. image:: ./screenshots/install_startmenu.png
-     :class: inline
-
-
-#. Make sure the **PostGIS** component and the **Client Tools** components are selected. Click **Next**.
-
-   .. image:: ./screenshots/install_components.png
-     :class: inline
-
-
-#. Ready for install! Click **Install**.
-
-   .. image:: ./screenshots/install_ready.png
-     :class: inline
-
-
-#. The installation process will run for a couple of minutes.
-
-   .. image:: ./screenshots/install_installing.png
-     :class: inline
-
-
-#. When the installation is complete, launch the Dashboard to start the next section of the workshop! Click **Finish**.
-
-   .. image:: ./screenshots/install_finish.png
-     :class: inline
+#. pgAdmin 4 is web-based so a tab will open in your browser window. The first time, it will prompt for a master password to use, set one, then enter it to see the servers.
