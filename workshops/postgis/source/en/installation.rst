@@ -41,22 +41,22 @@ For Windows, there is the EnterpriseDB PostgreSQL distributions: https://www.pos
      
 #. Search for PostGIS under **Spatial Extensions** and check it.
      
-     .. image:: ./screenshots/windows11.PNG
+   .. image:: ./screenshots/windows11.PNG
      :class: inline
      
 #. Follow the installation process and click on **I Agree** in the License Agreement step:
 
-     .. image:: ./screenshots/windows14.PNG
+   .. image:: ./screenshots/windows14.PNG
      :class: inline
      
 #. Choose the PostGIS component:
 
-     .. image:: ./screenshots/windows15.PNG
+   .. image:: ./screenshots/windows15.PNG
      :class: inline
 
 #. Leave the default directories and complete the installation:
 
-     .. image:: ./screenshots/windows20.PNG
+   .. image:: ./screenshots/windows20.PNG
      :class: inline
 
 #. Go to **Start** and look for the PostgreSQL folder where pgAdmin 4 will be located. Open it and set a password to login everytime.
