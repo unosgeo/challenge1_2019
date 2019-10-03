@@ -180,6 +180,10 @@ for my $w (keys %workshops)
   $cmd = "sphinx-build -b html $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
   run($cmd);
   print STDERR "  Build complete.\n";
+  print STDERR "  Building PDF using theme '$theme'...\n";
+  $cmd = "sphinx-build -b pdf $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
+  run($cmd);
+  print STDERR "  Build complete.\n";
 
 }
 
