@@ -3,8 +3,8 @@
 use File::Find;
 
 my $debug = 0;
-my $gitroot = "/Users/may/Documents/workshops/";
-my $webroot = "/Users/may/Documents/workshops/htdocs/";
+my $gitroot = "/home/may/Documents/challenge1_2019";
+my $webroot = "/home/may/Documents/challenge1_2019/htdocs/";
 my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
@@ -180,10 +180,10 @@ for my $w (keys %workshops)
   $cmd = "sphinx-build -b html $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
   run($cmd);
   print STDERR "  Build complete.\n";
-  print STDERR "  Building PDF using theme '$theme'...\n";
-  $cmd = "sphinx-build -b pdf $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
-  run($cmd);
-  print STDERR "  Build complete.\n";
+  #print STDERR "  Building LaTeX using theme '$theme'...\n";
+  #$cmd = "sphinx-build -b latex $overrides/latex -d '$tmppath/doctrees' '$confdir' '$webpath'";
+  #run($cmd);
+  #print STDERR "  Build complete.\n";
 
 }
 
