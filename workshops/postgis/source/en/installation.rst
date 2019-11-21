@@ -110,3 +110,10 @@ Install pgAdmin 4 (Mac OS X)
       :class: inline
    
 #. pgAdmin 4 is web-based so a tab will open in your browser window. The first time, it will prompt for a master password to use, set one, then enter it to see the servers.
+
+Linux
+-----
+
+sudo apt update
+sudo apt -y upgrade
+sudo reboot
