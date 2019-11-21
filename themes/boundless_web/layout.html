@@ -15,7 +15,7 @@
     {{ breadcrumbdelim }} <a href="{{ link }}">{{ title|striptags }}</a>
   {%- endif %}
 </div> 
-{%- endmacro %} 
+{%- endmacro %}
 {%- macro rellinkbar() %}
 <ul id="relatedlinks" class="selfclear">
   {%- for rellink in rellinks %}
@@ -94,7 +94,7 @@
   {%- else %}
     {%- set titlesuffix = "" %}
   {%- endif %}
-  <title>Boundless : {{ project }}{% if pagename != 'index' %} : {{ title|striptags }}{%- endif %}</title>
+  <title>UN OpenGIS – {{ project }}{% if pagename != 'index' %} : {{ title|striptags }}{%- endif %}</title>
 
   <link rel="profile" href="http://gmpg.org/xfn/11">
   {%- for link, type, title in page_links %}
@@ -125,6 +125,9 @@
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '{{ file_suffix }}'
     };
+    $(document).ready(function() {
+    $("a[href^='http']").attr('target','_blank');
+});
   </script>
   <script type="text/javascript" src="{{ pathto('_static/underscore.js', 1) }}"></script>
   <script type="text/javascript" src="{{ pathto('_static/doctools.js', 1) }}"></script>
@@ -139,7 +142,7 @@
 <![endif]-->
 <!--<script type="text/javascript"> document.write(unescape("%3Cscript src='//munchkin.marketo.net/munchkin.js' type='text/javascript'%3E%3C/script%3E")); </script> <script>Munchkin.init('242-IZP-883');</script>
 -->
-<title>Workshops - Boundless</title>
+<title>Course - UN OpenGIS</title>
 <meta name="description" content="Boundless not only develops the best open source geospatial software, we also teach you how to use it with training and certification for every level."/>
 <link rel="canonical" href="http://boundlessgeo.com/resources/training/" />
 <meta property="og:locale" content="en_US"/>
@@ -257,12 +260,12 @@
               </ul></div>   </div>
 
             </div>-->
-            <header class="page-header">
+<!--             <header class="page-header">
               <div class="container">
             	<h1 class="page-title"><a href="{{ pathto('index') }}">{{ project }}</a></h1>
             	<p>{{ subheading }}</p>
               </div>
-            </header>
+            </header> -->
 
             {%- block pageheading %}
             <div id="pageheading">

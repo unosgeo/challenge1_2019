@@ -7,6 +7,7 @@ PostGIS is an extension for the PostgreSQL database to deal with spatial data, s
 
 Windows
 -------
+
 For Windows, there is the EnterpriseDB PostgreSQL distributions: https://www.postgresql.org/download/windows/, an interactive installer that will provide the option for installing PostGIS in an installation dialog with "Stack Builder":
 
 #. First install PostgreSQL with the EDB installer:
@@ -63,6 +64,7 @@ For Windows, there is the EnterpriseDB PostgreSQL distributions: https://www.pos
 
 Mac OS X
 --------
+
 For OSX users it is possile to install PostGIS along with PostgreSQL using the Postgres app: http://postgresapp.com/. This is the easiest way to do the installation but you can also use the EnterpriseDb installer: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads or the homebrew installer if you are familiar with it by running the command: ``brew install postgis``.
 
 The following steps will guide you in the installation using Postgres.app:
@@ -84,13 +86,14 @@ The following steps will guide you in the installation using Postgres.app:
    .. image:: ./screenshots/installosx3.png
       :class: inline
    
-#. If successful, you will see the databases available to connect to, this means that the database engine is up and running. By clicking the icons of the databases you will be prompted to a command line but for this workshop, the user interface pgAdmin 4 will be preferred.
+#. If successful, you will see the databases available to connect to, this means that the database engine is up and running. By clicking the icons of the databases you will be prompted to a command line but for this course, the user interface pgAdmin 4 will be preferred.
 
    .. image:: ./screenshots/installosx4.png
       :class: inline
    
 Install pgAdmin 4 (Mac OS X)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 #. Go to: https://www.pgadmin.org/download/ to get pgAdmin 4 for **Mac OS X**. Double click the installer and agree to the terms by clicking **Agree**.
 
    .. image:: ./screenshots/installpgadmin1.png

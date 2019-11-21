@@ -3,13 +3,13 @@
 use File::Find;
 
 my $debug = 0;
-my $gitroot = "/home/may/Documents/challenge1_2019";
+my $gitroot = "/home/may/Documents/challenge1_2019/";
 my $webroot = "/home/may/Documents/challenge1_2019/htdocs/";
 my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
 my $confdir = "";
-my $theme = "boundless_web";
+my $theme = "pyramid";
 
 %workshops = 
 (
@@ -176,14 +176,15 @@ for my $w (keys %workshops)
   # and ignore the conf.py in the source tree. We use the -D flag to set the
   # project name to something sensible.
   #
+  print STDERR " Templates path::::: '$templates_path' ";
   print STDERR "  Building HTML using theme '$theme'...\n";
   $cmd = "sphinx-build -b html $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
   run($cmd);
   print STDERR "  Build complete.\n";
-  #print STDERR "  Building LaTeX using theme '$theme'...\n";
-  #$cmd = "sphinx-build -b latex $overrides/latex -d '$tmppath/doctrees' '$confdir' '$webpath'";
-  #run($cmd);
-  #print STDERR "  Build complete.\n";
+  print STDERR "  Building LaTeX using theme '$theme'...\n";
+  $cmd = "sphinx-build -b latex $overrides -d '$tmppath/doctrees' '$confdir' '$webpath/latex'";
+  run($cmd);
+  print STDERR "  Build complete.\n";
 
 }
 
@@ -221,4 +222,3 @@ sub findconf
      push(@confdirs, $File::Find::dir);
   }
 }
-

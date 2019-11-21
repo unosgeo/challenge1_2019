@@ -11,7 +11,7 @@ Schemas are like folders, and can hold tables, views, functions, sequences and o
 
 Inside that schema, the default install of PostGIS creates the ``geometry_columns``, ``geography_columns`` and ``spatial_ref_sys`` metadata relations, as well as all the types and functions used by PostGIS. So users of PostGIS always need access to the public schema.
 
-In the public schema you can also see all the tables we have created so far in the workshop.
+In the public schema you can also see all the tables we have created so far in the course.
 
 
 Why use Schemas?

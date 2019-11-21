@@ -137,7 +137,7 @@ Online backup and restore allows an administrator to keep an extremely up-to-dat
 
 .. note::
 
-  The best way to learn about online backup is to read the relevant sections of the PostgreSQL manual on `continuous archiving and point-in-time recovery <http://www.postgresql.org/docs/current/static/continuous-archiving.html>`_. This section of the PostGIS workshop will just provide a brief snapshot of online backup set-up.
+  The best way to learn about online backup is to read the relevant sections of the PostgreSQL manual on `continuous archiving and point-in-time recovery <http://www.postgresql.org/docs/current/static/continuous-archiving.html>`_. This section of the PostGIS course will just provide a brief snapshot of online backup set-up.
 
 
 How it Works

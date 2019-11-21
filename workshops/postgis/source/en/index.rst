@@ -37,43 +37,10 @@ Workshop Modules
 
    welcome
    introduction
-   installation
-   creating_db
-   loading_data
-   about_data
-   simple_sql
-   simple_sql_exercises
-   simple_sql_exercise_answers
-   geometries
-   geometries_exercises
-   geometries_exercise_answers
-   spatial_relationships
-   spatial_relationships_exercises
-   spatial_relationships_exercise_answers
-   joins
-   joins_exercises
-   joins_exercise_answers
-   indexing
-   projection
-   projection_exercises
-   projection_exercise_answers
-   geography
-   geometry_returning
-   joins_advanced
-   validity
-   equality
-   linear_referencing
-   de9im
-   clusterindex
-   3d
-   knn
-   history_tracking
-   advanced_geometry_construction
-   tuning
-   security
-   schemas
-   backup
-   upgrades
+   setup
+   basic
+   advanced
+   maintenance
 
    postgis-functions
    glossary

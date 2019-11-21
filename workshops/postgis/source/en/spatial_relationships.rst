@@ -195,5 +195,3 @@ Function List
 
 `ST_Within(geometry A , geometry B) <http://postgis.net/docs/manual-2.1/ST_Within.html>`_: Returns true if the geometry A is completely inside geometry B
 
-
-
