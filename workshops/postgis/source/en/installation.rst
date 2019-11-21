@@ -114,6 +114,27 @@ Install pgAdmin 4 (Mac OS X)
 Linux
 -----
 
-sudo apt update
-sudo apt -y upgrade
-sudo reboot
+Update and upgrade the packages, you will need to reboot for this.
+
+  ::
+   
+    sudo apt update
+    sudo apt -y upgrade
+    sudo reboot
+
+Install the repository to install PostgreSQL:
+
+    sudo apt -y install gnupg2
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |sudo tee  /etc/apt/sources.list.d/pgdg.list
+
+Verify repository files content:
+
+  ::
+    cat /etc/apt/sources.list.d/pgdg.list
+    
+Install PostgreSQL 11:
+
+  ::
+    sudo apt update
+    sudo apt -y install postgresql-11
