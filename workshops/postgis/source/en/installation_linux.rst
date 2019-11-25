@@ -1,3 +1,5 @@
+.. _installation_linux:
+
 Linux (Ubuntu 18.04 / Debian 10 Linux distribution)
 ---------------------------------------------------
 
