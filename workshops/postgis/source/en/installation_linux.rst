@@ -1,5 +1,5 @@
 Linux (Ubuntu 18.04 / Debian 10 Linux distribution)
-===================================================
+---------------------------------------------------
 
 #. An installation of PostgreSQL is required before we can add the PostGIS spatial extension. To begin, first update and upgrade the packages from the terminal, you will need to reboot after this.
 
