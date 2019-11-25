@@ -1,3 +1,4 @@
+.. _installation_mac:
 
 Mac OS X
 ========
