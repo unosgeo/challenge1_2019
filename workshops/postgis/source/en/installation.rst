@@ -159,7 +159,7 @@ Linux (Ubuntu 18.04 / Debian 10 Linux distribution)
 
 #. During the installation set a password for the ``postgres`` user. You may use ``postgres`` for local purposes.
 
-   .. image:: ./screenshots/installpgadmin2.png
+   .. image:: ./screenshots/pgadmin_linux1.png
       :class: inline
       
   #. Test opening the PGAdmin interface. The first time, it will prompt for a master password to use, set one, then enter it to see the servers.
