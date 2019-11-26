@@ -50,7 +50,7 @@ For Windows, there is the EnterpriseDB PostgreSQL distributions: https://www.pos
    .. image:: ./screenshots/windows15.PNG
      :class: inline
 
-#. Leave the default directories and complete the installation:
+#. Leave the default directories, **agree to registering the GDAL_DATA environment variable, enable raster drivers, and complete** the installation:
 
    .. image:: ./screenshots/windows20.PNG
      :class: inline
