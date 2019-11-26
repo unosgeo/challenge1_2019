@@ -9,9 +9,7 @@ PostGIS is an extension for the PostgreSQL database to deal with spatial data, s
 
 .. toctree::
    :maxdepth: 1
-   :numbered:
    
    installation_win
    installation_mac
    installation_linux
-  
