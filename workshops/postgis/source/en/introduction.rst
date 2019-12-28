@@ -23,13 +23,14 @@ Combined, spatial data types, indexes, and functions provide a flexible structur
 In the Beginning
 ----------------
 
-In legacy first-generation :term:`GIS` implementations, all spatial data is stored in flat files and special :term:`GIS` software is required to interpret and manipulate the data.  These first-generation management systems are designed to meet the needs of users where all required data is within the user's organizational domain.  They are proprietary, self-contained systems specifically built for handling spatial data.  
+In legacy first-generation :term:`GIS` implementations, all spatial data was stored in flat files and special :term:`GIS`
+software was required to interpret and manipulate the data. These first-generation management systems were designed to meet the needs of users where all required data is within the user’s organizational domain. They are proprietary, self-contained systems specifically built for handling spatial data.
 
 Second-generation spatial systems store some data in relational databases (usually the "attribute" or non-spatial parts) but still lack the flexibility afforded with direct integration.  
 
 **True spatial databases were born when people started to treat spatial features as first class database objects.**  
 
-Spatial databases fully integrate spatial data with an object relational database.  The orientation changes from GIS-centric to database-centric.     
+Spatial databases fully integrate spatial data with an object relational database. The orientation changes from GIS-centric to database-centric.     
 
 .. image:: ./introduction/beginning.png
   :class: inline
