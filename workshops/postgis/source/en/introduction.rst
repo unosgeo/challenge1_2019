@@ -35,7 +35,7 @@ Spatial databases fully integrate spatial data with an object relational databas
 .. image:: ./introduction/beginning.png
   :class: inline
 
-.. note:: A spatial database management system may be used in applications besides the geographic world.  Spatial databases are used to manage data related to the anatomy of the human body, large-scale integrated circuits, molecular structures, and electro-magnetic fields, among others.
+.. note:: Where ADT stands for Abstract Data Type, a mathematical model for data types. In addition, A spatial database management system may be used in applications besides the geographic world.  Spatial databases are used to manage data related to the anatomy of the human body, large-scale integrated circuits, molecular structures, and electro-magnetic fields, among others.
 
 
 Spatial Data Types
@@ -99,8 +99,6 @@ PostgreSQL was designed from the very start with type extension in mind -- the a
 Why choose PostgreSQL?
 ~~~~~~~~~~~~~~~~~~~~~~
 
-A common question from people familiar with open source databases is, "Why wasn't PostGIS built on MySQL?".
-
 PostgreSQL has:
 
 * Proven reliability and transactional integrity by default (ACID)
@@ -111,7 +109,7 @@ PostgreSQL has:
 * Generic index structure (GiST) to allow R-Tree index
 * Easy to add custom functions
 
-Combined, PostgreSQL provides a very easy development path to add new spatial types. In the proprietary world, only Illustra (now Informix Universal Server) allows such easy extension. This is no coincidence; Illustra is a proprietary re-working of the original PostgreSQL code base from the 1980's. 
+Combined, PostgreSQL provides a very easy development path to add new spatial types. In the propietary world, Illustra is a proprietary re-working of the original PostgreSQL code base from the 1980's. 
 
 Because the development path for adding types to PostgreSQL was so straightforward, it made sense to start there. When MySQL released basic spatial types in version 4.1, the PostGIS team took a look at their code, and the exercise reinforced the original decision to use PostgreSQL. Because MySQL spatial objects had to be hacked on top of the string type as a special case, the MySQL code was spread over the entire code base. Development of PostGIS 0.1 took under a month. Doing a "MyGIS" 0.1 would have taken a lot longer, and as such, might never have seen the light of day.
 
@@ -122,7 +120,7 @@ The `shapefile <http://en.wikipedia.org/wiki/Shapefile>`_ (and other file format
 
 * **Files require special software to read and write.**  SQL is an abstraction for random data access and analysis. Without that abstraction, you will need to write all the access and analysis code yourself.
 * **Concurrent users can cause corruption.** While it's possible to write extra code to ensure that multiple writes to the same file do not corrupt the data, by the time you have solved the problem and also solved the associated performance problem, you will have written the better part of a database system. Why not just use a standard database?
-* **Complicated questions require complicated software to answer.** Complicated and interesting questions (spatial joins, aggregations, etc) that are expressible in one line of SQL in the database take hundreds of lines of specialized code to answer when programming against files.
+* **Complicated questions require complicated software to answer.** Complicated and interesting questions (spatial joins, aggregations, etc) that are expressible in one line of SQL in the database take hundreds of lines of specialized code to answer when programming against files. This is now improved with the use of `GeoPandas <http://geopandas.org/>`_.
 
 Most users of PostGIS are setting up systems where multiple applications will be expected to access the data, so having a standard SQL access method simplifies deployment and development. Some users are working with large data sets; with files, they might be segmented into multiple files, but in a database they can be stored as a single large table.
 
@@ -192,9 +190,9 @@ The following table shows a list of some of the software that leverages PostGIS:
 |   * OpenJUMP                                    |   * ESRI ArcGIS 9.3+                         |           
 |   * OpenEV                                      |   * Manifold                                 |   
 |   * SharpMap SDK for Microsoft.NET 2.0          |   * GeoConcept                               |       
-|   * ZigGIS for ArcGIS/ArcObjects.NET            |   * MapInfo (v10)                            |           
-|   * GvSIG                                       |   * AutoCAD Map 3D (using FDO)               |   
-|   * GRASS                                       |                                              |           
+|   * GvSIG                                       |   * MapInfo (v10)                            |           
+|   * GRASS                                       |   * AutoCAD Map 3D (using FDO)               |   
+|                                                 |                                              |           
 |                                                 |                                              |             
 +-------------------------------------------------+----------------------------------------------+
 
