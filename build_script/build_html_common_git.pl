@@ -27,7 +27,7 @@ my $theme = "pyramid";
 #    "git" => "workshops/postgis-spatialdb/",
 #    "project" => "Spatial Database Tips and Tricks" },
 
-  "postgis-intro" => {
+  "unosgeo/challenge1_2019" => {
      "git" => "workshops/postgis/source/en/",
      "master_doc" => "index",
      "project" => "Introduction to PostGIS" },
