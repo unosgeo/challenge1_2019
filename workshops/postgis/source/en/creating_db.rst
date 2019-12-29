@@ -46,7 +46,7 @@ Creating a Database
    .. image:: ./screenshots/pgadmin_02.png
      :class: inline
 
-#. Select the new ``nyc`` database and open it up to display the tree of objects. You'll see the ``public`` schema.
+#. Select the new ``nyc`` database and open it up to display the tree of objects. Where the parent ``nyc``is the database. The objects contained within it allow to understand the components of this database listing the extisting triggers; `catalogs <https://www.postgresql.org/docs/9.1/catalogs.html>`_, where a relational database management system stores schema metadata, such as information about tables and columns, and internal bookkeeping information; you can list the existing extensions, and are allowed to create new ones through the pgAdmin interface; installed languages; foreign data wrappers for handling access to remote objects from external SQL databases. Once you select the the ``public`` schema you'll see the tree of objects.
 
    .. image:: ./screenshots/pgadmin_04.png
 
