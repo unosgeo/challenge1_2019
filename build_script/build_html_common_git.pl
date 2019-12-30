@@ -3,8 +3,8 @@
 use File::Find;
 
 my $debug = 0;
-my $gitroot = "/home/may/Documents/challenge1_2019/";
-my $webroot = "/home/may/Documents/challenge1_2019/htdocs/";
+my $gitroot = "/home/may/Documents/unosgeo/challenge1_2019/";
+my $webroot = "/home/may/Documents/unosgeo/challenge1_2019/htdocs/";
 my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
@@ -27,7 +27,7 @@ my $theme = "pyramid";
 #    "git" => "workshops/postgis-spatialdb/",
 #    "project" => "Spatial Database Tips and Tricks" },
 
-  "unosgeo/challenge1_2019" => {
+  "postgis-intro" => {
      "git" => "workshops/postgis/source/en/",
      "master_doc" => "index",
      "project" => "Introduction to PostGIS" },
