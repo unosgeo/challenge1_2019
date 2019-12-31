@@ -54,7 +54,7 @@ Supported by a wide variety of libraries and applications, PostGIS provides many
    .. image:: ./screenshots/qgis_postgis_04.png
       :class: inline
  
-#. Click the **Ok** button to create the table. It may take a few minutes to load, but this is the largest file in our test set.
+#. Click the **Ok** button to create the table. It may take a few minutes to load, but this is the largest file in our data set.
 
 #. Repeat the import process for the remaining shapefiles in the data directory:
 

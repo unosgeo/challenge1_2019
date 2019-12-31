@@ -26,7 +26,9 @@ PostgreSQL has a number of administrative front-ends.  The primary one is `psql 
 Creating a Database
 -------------------
 
-#. Open the Databases tree item and have a look at the available databases.  The ``postgres`` database is the user database for the default postgres user and is not too interesting to us.  
+#. Open the Databases tree item and have a look at the available databases.  The ``postgres`` database is the user database for the default postgres user. It is created in the initialization ``ìnitdb`` as a new PostgreSQL database cluster. A database cluster is a collection of databases that are managed by a single server instance.
+
+Creating a database cluster consists of creating the directories in which the database data will live, generating the shared catalog tables (tables that belong to the whole cluster rather than to any particular database), and creating the template1 and postgres databases. When you later create a new database, everything in the template1 database is copied. Therefore, anything installed in template1 is automatically copied into each database created later. The postgres database is a default database meant for use by users, utilities and third party applications.
 
 #. Right-click on the ``Databases`` item and select ``New Database``.
 
