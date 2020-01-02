@@ -45,7 +45,12 @@ Let's have a look at the ``geometry_columns`` table in our database.  Paste this
 .. image:: ./geometries/start08.png
   :class: inline
 
-* ``f_table_catalog``, ``f_table_schema``, and ``f_table_name`` provide the fully qualified name of the feature table containing a given geometry.
+
+* ``f_table_catalog`` together with ``f_table_schema``, and ``f_table_name``, the fully qualified name of the featured table containing the geometry column.
+* ``f_table_schema`` together with ``f_table_catalog`` and ``f_table_name``, the fully qualified name of the featured table containing the geometry column.
+* ``f_table_name`` together with ``f_table_catalog`` and ``f_table_schema``, the fully qualified name of the featured table containing the geometry column.
+* ``f_table_name`` is the table schema that is implementing the geometry column.
+* ``g_table_name``is the table name that is implementing the geometry column.
 * ``f_geometry_column`` is the name of the column that contains a geometry -- for feature tables with multiple geometry columns, there will be one record for each.
 * ``coord_dimension`` and ``srid`` define the the dimension of the geometry (2-, 3- or 4-dimensional) and the Spatial Reference system identifier that refers to the ``spatial_ref_sys`` table respectively.
 * The ``type`` column defines the type of geometry as described below; we've seen Point and Linestring types so far.
