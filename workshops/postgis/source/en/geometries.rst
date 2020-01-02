@@ -46,9 +46,7 @@ Let's have a look at the ``geometry_columns`` table in our database.  Paste this
   :class: inline
 
 
-* ``f_table_catalog`` together with ``f_table_schema``, and ``f_table_name``, the fully qualified name of the featured table containing the geometry column.
-* ``f_table_schema`` together with ``f_table_catalog`` and ``f_table_name``, the fully qualified name of the featured table containing the geometry column.
-* ``f_table_name`` together with ``f_table_catalog`` and ``f_table_schema``, the fully qualified name of the featured table containing the geometry column.
+* ``f_table_catalog`` together with ``f_table_schema``, and ``f_table_name``, the fully qualified name of the featured table containing the geometry column. Where the ``f_table_catalog`` contains detailed information (sometimes called **descriptor information** or **metadata**) regarding the various objects that are of interest to the system itself. The catalog is the place where--among other things--all of the various schemas (``f_table_schema``) (external, conceptual, internal) and all of the corresponding mappings (external/conceptual, conceptual/internal) are kept.
 * ``f_table_name`` is the table schema that is implementing the geometry column.
 * ``g_table_name``is the table name that is implementing the geometry column.
 * ``f_geometry_column`` is the name of the column that contains a geometry -- for feature tables with multiple geometry columns, there will be one record for each.
