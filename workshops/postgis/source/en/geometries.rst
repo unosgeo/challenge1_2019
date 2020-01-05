@@ -334,7 +334,7 @@ The following SQL query shows an example of :term:`WKB` representation (the call
 
   01020000000200000000000000000000000000000000000000000000000000f03f0000000000000000
 
-For the purposes of this course we will continue to use WKT to ensure you can read and understand the geometries we're viewing.  However, most actual processes, such as viewing data in a GIS application, transferring data to a web service, or processing data remotely, WKB is the format of choice.
+For the purposes of this course we will continue to use WKT to ensure you can read and understand the geometries we're viewing.  However, most actual processes, such as viewing data in a GIS application, transferring data to a web service, or processing data remotely, WKB is the binary equivalent and is format of choice as they were originally defined by the Open Geospatial Consortium (OGC) and described in their `Simple Feature Access <https://www.opengeospatial.org/standards/sfa>`_.
 
 Since WKT and WKB were defined in the  :term:`SFSQL` specification, they do not handle 3- or 4-dimensional geometries.  For these cases PostGIS has defined the Extended Well Known Text (EWKT) and Extended Well Known Binary (EWKB) formats.  These provide the same formatting capabilities of WKT and WKB with the added dimensionality and will be explored in a further section of this course :ref:`section <3d>`.
 
