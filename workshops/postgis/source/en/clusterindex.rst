@@ -5,7 +5,7 @@ Clustering on Indices
 
 Databases can only retrieve information as fast as they can get it off of disk. Small databases will float up entirely into RAM cache, and get away from physical disk limitations, but for large databases, access to the physical disk will be a limiting stop in disk access speed.
 
-Data is written to disk opportunistically, so there is not necessarily any correlation between the order data is stored on the disk and the way it will be accessed or organized by applications.
+Data is written to disk opportunistically, so there is not necessarily any correlation between the order data is stored on the disk and the way it will be accessed or organized by applications. With the advent of Solid State Disks (SSD) this is changing to improve performance, `in the postgis Data Management and Queries <https://postgis.net/docs/using_postgis_dbmanagement.html#idm2461>`_ is mentioned the configuration for an index on an SSD.
 
 .. image:: ./screenshots/clustering1.jpg
   :class: inline
