@@ -23,6 +23,11 @@ In the previous :ref:`section <loading_data>`, we loaded a variety of data.  Bef
 
 .. image:: ./geometries/start01.png
 
+.. note::
+
+   In versions of PostGIS >= 2.0 the behavior to add geometry columns changed and it is now possible to specify the type of geometry and srid while creating a table as done in the previous query. Before, the `AddGeometryColumn <https://postgis.net/docs/AddGeometryColumn.html>`_ function had to be used to specify the geometry column after the creation of the table, both ways are now possible.
+
+
 The above example CREATEs a table (**geometries**) then INSERTs five geometries: a point, a line, a polygon, a polygon with a hole, and a collection. Finally, the inserted rows are SELECTed and displayed in the Output pane.
 
 Metadata Tables
