@@ -68,12 +68,6 @@ Exercises
     ------------+----------
      Fort Green | Brooklyn
 
-  .. note::
-
-    "Hey, why did you change from a 'MULTILINESTRING' to a 'LINESTRING'?" Spatially they describe the same shape, so going from a single-item multi-geometry to a singleton saves a few keystrokes.
-
-    More importantly, we also rounded the coordinates to make them easier to read, which does actually change results: we couldn't use the ST_Touches() predicate to find out which roads join Atlantic Commons, because the coordinates are not exactly the same anymore.
-
 
 * **"What streets does Atlantic Commons join with?"**
 
