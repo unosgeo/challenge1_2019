@@ -52,16 +52,16 @@ Clustering on GeoHash
 
 To cluster on the ST_GeoHash() function, you first need to have a geohash index on your data. Fortunately, they are easy to build.
 
-Geohash is a public domain geocode system invented in 2008 by Gustavo Niemeyer, it encodes a geographic location into a short string of letters and digits. The first step is decoding it from a variant of base 32 using all digits 0-9 and almost all lower case letters except a, i, l and o, for example:
+Geohash is a public domain geocode system invented in 2008 by Gustavo Niemeyer, it encodes a geographic location into a short string of letters and digits. The first step is decoding it from a variant of base 32 using all digits 0-9 and almost all lower case letters except a, i, l and o, here is an example following the `hash ezs42<https://en.wikipedia.org/wiki/Geohash>`_:
 
 ::
 
-  Decimal |	Base 32
+  Decimal | Base 32 
   ------------------
       0   | 0	
       1   | 1 
-      2   |	2 
-      3   |	3	
+      2   | 2 
+      3   | 3 
       4   | 4	
       5   | 5	
       6   | 6	
@@ -73,7 +73,26 @@ Geohash is a public domain geocode system invented in 2008 by Gustavo Niemeyer, 
       12  | d 
       13  | e	
       14  | f 
-      15  |	g 
+      15  | g 
+      16  | h 
+      17  | j 
+      18  | k 
+      19  | m 
+      20  | n 
+      21  | p 
+      22  | q
+      23  | r 
+      24  | s 
+      25  | t 
+      26  | u 
+      27  | v 
+      28  | w 
+      29  | y 
+      30  | z 
+
+This operation results in the bits 01101 11111 11000 00100 00010. Assuming that counting starts at 0 in the left side, the even bits are taken for the longitude code (0111110000000), while the odd bits are taken for the latitude code (101111001001).
+
+Each binary code is then used in a series of divisions, considering one bit at a time, again from the left to the right side. For the latitude value, the interval -90 to +90 is divided by 2, producing two intervals: -90 to 0, and 0 to +90. Since the first bit is 1, the higher interval is chosen, and becomes the current interval. The procedure is repeated for all bits in the code. Finally, the latitude value is the center of the resulting interval. Longitudes are processed in an equivalent way, keeping in mind that the initial interval is -180 to +180.
 
 The geohash algorithm only works on data in geographic (longitude/latitude) coordinates, so we need to transform the geometries (to EPSG:4326, which is longitude/latitude) at the same time as we hash them.
 
