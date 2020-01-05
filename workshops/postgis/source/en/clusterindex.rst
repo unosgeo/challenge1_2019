@@ -52,7 +52,28 @@ Clustering on GeoHash
 
 To cluster on the ST_GeoHash() function, you first need to have a geohash index on your data. Fortunately, they are easy to build.
 
-Geohash is a public domain geocode system invented in 2008 by Gustavo Niemeyer, it encodes a geographic location into a short string of letters and digits.
+Geohash is a public domain geocode system invented in 2008 by Gustavo Niemeyer, it encodes a geographic location into a short string of letters and digits. The first step is decoding it from a variant of base 32 using all digits 0-9 and almost all lower case letters except a, i, l and o, for example:
+
+::
+
+  Decimal |	Base 32
+  ------------------
+      0   | 0	
+      1   | 1 
+      2   |	2 
+      3   |	3	
+      4   | 4	
+      5   | 5	
+      6   | 6	
+      7   | 7	
+      8   | 8	
+      9   | 9	
+      10  | b	
+      11  | c  
+      12  | d 
+      13  | e	
+      14  | f 
+      15  |	g 
 
 The geohash algorithm only works on data in geographic (longitude/latitude) coordinates, so we need to transform the geometries (to EPSG:4326, which is longitude/latitude) at the same time as we hash them.
 
