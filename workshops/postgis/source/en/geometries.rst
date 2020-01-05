@@ -122,6 +122,13 @@ So, we can read the ordinates from a point like this:
     FROM geometries
     WHERE name = 'Point';
 
+::
+
+  st_x | st_y 
+ ------+------
+     0 |    0
+
+
 The New York City subway stations (``nyc_subway_stations``) table is a data set represented as points. The following SQL query will return the geometry associated with one point (in the :command:`ST_AsText` column).
 
 .. code-block:: sql
@@ -329,7 +336,7 @@ The following SQL query shows an example of :term:`WKB` representation (the call
 
 For the purposes of this course we will continue to use WKT to ensure you can read and understand the geometries we're viewing.  However, most actual processes, such as viewing data in a GIS application, transferring data to a web service, or processing data remotely, WKB is the format of choice.
 
-Since WKT and WKB were defined in the  :term:`SFSQL` specification, they do not handle 3- or 4-dimensional geometries.  For these cases PostGIS has defined the Extended Well Known Text (EWKT) and Extended Well Known Binary (EWKB) formats.  These provide the same formatting capabilities of WKT and WKB with the added dimensionality.
+Since WKT and WKB were defined in the  :term:`SFSQL` specification, they do not handle 3- or 4-dimensional geometries.  For these cases PostGIS has defined the Extended Well Known Text (EWKT) and Extended Well Known Binary (EWKB) formats.  These provide the same formatting capabilities of WKT and WKB with the added dimensionality and will be explored in a further section of this course :ref:`section <3d>`.
 
 Here is an example of a 3D linestring in WKT:
 
