@@ -116,7 +116,7 @@ Here's an example of SQL to move invalid geometries out of the main table into a
   DELETE FROM nyc_neighborhoods
   WHERE NOT ST_IsValid(geom);
 
-A good tool for visually repairing invalid geometry is OpenJump (http://openjump.org) which includes a validation routine under **Tools->QA->Validate Selected Layers**.
+A good tool for visually repairing invalid geometry is QGIS (https://qgis.org/en/site/) which includes a validation tool under **Vector->Geometry Tools->Check Validity...**.
 
 Now the good news: a large proportion of invalidities **can be fixed inside the database** using either:
 
