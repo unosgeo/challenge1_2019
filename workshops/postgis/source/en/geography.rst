@@ -128,7 +128,7 @@ Building a spatial index on a geography table is exactly the same as for geometr
   CREATE INDEX sidx_nyc_subway_stations_geog
   ON nyc_subway_stations_geog USING GIST (geog);
 
-The difference is under the covers: the geography index will correctly handle queries that cover the poles or the international date-line, while the geometry one will not.
+The difference is under the covers: the geography index type provides native support for spatial features represented on "geographic" coordinates (sometimes called "geodetic" coordinates, or "lat/lon", or "lon/lat"). Geographic coordinates are spherical coordinates expressed in angular units (degrees) and will correctly handle queries that cover the poles or the international date-line, while the geometry one will not, since the basis for the PostGIS geometry type is a plane. The shortest path between two points on the plane is a straight line. That means calculations on geometries (areas, distances, lengths, intersections, etc) can be calculated using cartesian mathematics and straight line vectors. Not so useful for spherical (pole to pole distances).
 
 There are only a small number of native functions for the geography type:
  
