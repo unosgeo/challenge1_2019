@@ -130,7 +130,8 @@ SQL Edits
 
 Let's turn the two streets named "Cumberland Walk" to the more stylish "Cumberland Wynde":
 
-.. code-block::sql
+
+.. code-block:: sql
 
   UPDATE nyc_streets
   SET name = 'Cumberland Wynde'
@@ -138,9 +139,16 @@ Let's turn the two streets named "Cumberland Walk" to the more stylish "Cumberla
    
 Updating the two streets will cause the original streets to be marked as deleted in the history table, with a deletion time of now, and two new streets with the new name added, with an addition time of now. You can inspect the historical records:
 
-.. code-block::sql
+
+
+.. code-block:: sql
 
   SELECT * FROM nyc_streets WHERE name LIKE 'Cumberland W%';
+  
+The results will look like:
+
+   .. image:: ./screenshots/history01.png
+      :class: inline
   
 
 Querying the History Table
