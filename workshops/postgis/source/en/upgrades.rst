@@ -3,7 +3,7 @@
 Software Upgrades
 =================
 
-Because PostGIS resides within PostgreSQL every PostGIS installation actually consists of two versions of software: the PostgreSQL version and the PostGIS version.  The OpenGeo Suite only ships one combination at a time, so the number of potential combinations is reduced, but as a general principle, each version of PostGIS can be theoretically run within a number of versions of PostgreSQL, and vice versa.
+Because PostGIS resides within PostgreSQL every PostGIS installation actually consists of two versions of software: the PostgreSQL version and the PostGIS version.  As a general principle, each version of PostGIS can be theoretically run within a number of versions of PostgreSQL, and vice versa.
 
 So, upgrades need to be considered in terms of upgrading each component.
 
@@ -166,49 +166,6 @@ In this case you have to dump the whole database, which means the dump file will
 
 
 You should now have an upgraded database ready to use.
-
-
-PostGIS 2.0 Upgrade Issues
---------------------------
-
-In addition to being a major upgrade, and therefore requiring a dump and restore, PostGIS 2.0 made some major changes to behaviour and functionality, some of which are user facing. If you are upgrading from 1.X to 2.X you'll want to remain aware of these.
-
-Function Signatures
-~~~~~~~~~~~~~~~~~~~
-
-Not only are there new functions, to support new features, but PostGIS 2.0 **removed a large number of old function signatures**. In particular, most of the function variants that are not prefixed by "ST\_" have been removed.
-
-For example, ST_Intersects() exists, but Intersects() no longer exists in PostGIS 2.0.
-
-For some client applications, upgrading the software to no longer use the old signatures is not an option. For those users, **it is possible to restore the old signatures**, by loading the ``legacy.sql`` file into your database. 
-
-Loading ``legacy.sql`` reestablishes all the old function signatures as aliases to the new signatures.
-
-Default WKT and WKB
-~~~~~~~~~~~~~~~~~~~
-
-Prior to PostGIS 2.0, the default forms of the ST_AsBinary() and ST_AsText() functions were the :term:`OGC` :term:`SFSQL` defined versions, which only supported two dimensions. Running ST_AsBinary() and ST_AsText() on 3-D and 4-D features just caused the extra dimensions to be stripped, and the returns were 2-D.
-
-For PostGIS 2.0, the ISO SQL/MM definitions of ST_AsBinary() and ST_AsText() are used. For 2-D features, the representations are the same, so no changes will be noticed. For 3-D and 4-D features, however, legal representations in ISO SQL/MM exist, so the dimensions will no longer be stripped, and ISO text and binary results will be returned.
-
-For well-known text, that means that the type string will include dimensionality information, and there will be extra ordinates, eg:
-
-::
-
-  POINT Z (0 0 0)
-  LINESTRING ZM (0 0 0 0, 1 1 1 1)
-
-For well-known binaries, that means that the type number will be promoted by a multiple of 1000 to indicate the dimensionality.
-
-* 0 implies 2D
-* 1000 implied 3D with a Z
-* 2000 implies 3D with an M
-* 3000 implies 4D
-
-So, for example
-
-* A POINT has type number 1, a POINT ZM has type number 3001
-* A LINESTRING has type number 2, LINESTRING M has type number 2002.
 
 Default SRID
 ~~~~~~~~~~~~
