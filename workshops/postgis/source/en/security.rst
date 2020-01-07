@@ -37,7 +37,7 @@ The file consists of five columns
 * **DATABASE** specifies what database the configuration line refers to or "all" for all databases
 * **USER** specifies what users the line refers to or "all" for all users
 * **CIDR-ADDRESS** specifies the network limitations for remote connections, using network/netmask syntax
-* **METHOD** specifies the authentication protocol to use. "trust" skips authentication entirely and simply accepts any valid username without challenge.
+* **METHOD** specifies the authentication protocol to use. "trust" skips authentication entirely and simply accepts any valid username without challenge. Other options are: "reject" which rejects the connection, "md5" which requires an md5 encrypted password, "password" which requires an unencrypted password, "gss" which uses GSSAPI to authenticate the user, "sspi" which uses SSPI to authenticate the user (only for Windows), "ident", "peer" which obtains the client's operating system user name from the operating system and check if it matches the requested database user name (for local connections), "ldap", "radius", "cert", "pam", and "bsd". See the `pg_hba.conf documentation for more info <https://www.postgresql.org/docs/11/auth-pg-hba-conf.html>`_.
 
 It's common for local connections to be trusted, since access to the server itself is usually privileged. Remote connections are disabled by default when PostgreSQL is installed: if you want to connect from remote machines, you'll have to add an entry.
 
