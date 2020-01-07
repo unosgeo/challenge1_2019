@@ -3,6 +3,49 @@
 PostgreSQL Security
 ===================
 
+Authentication
+--------------
+
+PostgreSQL supports many different `authentication methods <http://www.postgresql.org/docs/current/static/auth-methods.html>`_, to allow easy integration into existing enterprise architectures. For production purposes, the following methods are commonly used:
+
+* **Password** is the basic system where the passwords are stored by the database, with MD5 encryption.
+* Kerberos_ is a standard enterprise authentication method, which is used by both the GSSAPI_ and SSPI_ schemes in PostgreSQL. Using SSPI_, PostgreSQL can authenticate against Windows servers.
+* LDAP_ is another common enterprise authentication method. The `OpenLDAP <http://www.openldap.org/>`_ server bundled with most Linux distributions provides an open source implementation of LDAP_.
+* **Certificate** authentication is an option if you expect all client connections to be via SSL and are able to manage the distribution of keys.
+* PAM_ authentication is an option if you are on Linux or Solaris and use the PAM_ scheme for transparent authentication provision.
+
+Authentication methods are controlled by the ``pg_hba.conf`` file. The "HBA" in the file name stands for "host based access", because in addition to allowing you to specify the authentication method to use for each database, it allows you to limit host access using network addresses.
+
+Here is an example ``pg_hba.conf`` file:
+
+:: 
+
+  # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+
+  # "local" is for Unix domain socket connections only
+  local   all         all                               trust
+  # IPv4 local connections:
+  host    all         all         127.0.0.1/32          trust
+  # IPv6 local connections:
+  host    all         all         ::1/128               trust
+  # remote connections for nyc database only
+  host    nyc         all         192.168.1.0/2         ldap
+
+The file consists of five columns
+
+* **TYPE** determines the kind of access, either "local" for connections from the same server or "host" for remote connections.
+* **DATABASE** specifies what database the configuration line refers to or "all" for all databases
+* **USER** specifies what users the line refers to or "all" for all users
+* **CIDR-ADDRESS** specifies the network limitations for remote connections, using network/netmask syntax
+* **METHOD** specifies the authentication protocol to use. "trust" skips authentication entirely and simply accepts any valid username without challenge.
+
+It's common for local connections to be trusted, since access to the server itself is usually privileged. Remote connections are disabled by default when PostgreSQL is installed: if you want to connect from remote machines, you'll have to add an entry.
+
+The line for ``nyc`` in the example above is an example of a remote access entry. The ``nyc`` example allows LDAP authenticated access only to machines on the local network (in this case the 192.168.1. network) and only to the nyc database. Depending on the security of your network, you will use more or less strict versions of these rules in your production set-up.
+
+Authorization
+-------------
+
 PostgreSQL has a rich and flexible permissions system, with the ability to parcel out particular privileges to particular roles_, and provide users with the powers of one or more of those roles_.
 
 In addition, the PostgreSQL server can use multiple different systems to authenticate users. This means that the database can use the same authentication infrastructure as other architecture components, simplifying password management.
@@ -181,7 +224,7 @@ The pgcrypto_ module has a huge range of encryption options, so we will only dem
     CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 
-* Then, test the encryption function.
+* Then, test the encryption function. The first parameter is the **data to encrypt**, the second is the user selected **cipher key**, and the third is the **algorithm** used to encrypt which in this case *bf* stands for *blowfish*, another option for this is *aes* which stands for *AES (Rijndael-128)*.
 
   .. code-block:: sql
       
@@ -194,47 +237,6 @@ The pgcrypto_ module has a huge range of encryption options, so we will only dem
       
     -- round-trip a string using blowfish (bf)
     SELECT decrypt(encrypt('this is a test phrase', 'mykey', 'bf'), 'mykey', 'bf');
-
-
-Authentication
---------------
-
-PostgreSQL supports many different `authentication methods <http://www.postgresql.org/docs/current/static/auth-methods.html>`_, to allow easy integration into existing enterprise architectures. For production purposes, the following methods are commonly used:
-
-* **Password** is the basic system where the passwords are stored by the database, with MD5 encryption.
-* Kerberos_ is a standard enterprise authentication method, which is used by both the GSSAPI_ and SSPI_ schemes in PostgreSQL. Using SSPI_, PostgreSQL can authenticate against Windows servers.
-* LDAP_ is another common enterprise authentication method. The `OpenLDAP <http://www.openldap.org/>`_ server bundled with most Linux distributions provides an open source implementation of LDAP_.
-* **Certificate** authentication is an option if you expect all client connections to be via SSL and are able to manage the distribution of keys.
-* PAM_ authentication is an option if you are on Linux or Solaris and use the PAM_ scheme for transparent authentication provision.
-
-Authentication methods are controlled by the ``pg_hba.conf`` file. The "HBA" in the file name stands for "host based access", because in addition to allowing you to specify the authentication method to use for each database, it allows you to limit host access using network addresses.
-
-Here is an example ``pg_hba.conf`` file:
-
-:: 
-
-  # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
-
-  # "local" is for Unix domain socket connections only
-  local   all         all                               trust
-  # IPv4 local connections:
-  host    all         all         127.0.0.1/32          trust
-  # IPv6 local connections:
-  host    all         all         ::1/128               trust
-  # remote connections for nyc database only
-  host    nyc         all         192.168.1.0/2         ldap
-
-The file consists of five columns
-
-* **TYPE** determines the kind of access, either "local" for connections from the same server or "host" for remote connections.
-* **DATABASE** specifies what database the configuration line refers to or "all" for all databases
-* **USER** specifies what users the line refers to or "all" for all users
-* **CIDR-ADDRESS** specifies the network limitations for remote connections, using network/netmask syntax
-* **METHOD** specifies the authentication protocol to use. "trust" skips authentication entirely and simply accepts any valid username without challenge.
-
-It's common for local connections to be trusted, since access to the server itself is usually privileged. Remote connections are disabled by default when PostgreSQL is installed: if you want to connect from remote machines, you'll have to add an entry.
-
-The line for ``nyc`` in the example above is an example of a remote access entry. The ``nyc`` example allows LDAP authenticated access only to machines on the local network (in this case the 192.168.1. network) and only to the nyc database. Depending on the security of your network, you will use more or less strict versions of these rules in your production set-up.
 
 
 Links
