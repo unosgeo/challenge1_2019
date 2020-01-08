@@ -81,16 +81,6 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 html_theme = 'pyramid'
 
-
-html_theme_options = {
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
-}
-
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['../../../../themes']
 
@@ -154,7 +144,7 @@ html_copy_source = False
 htmlhelp_basename = 'GeostackIntro'
 
 # Page subheading
-html_context = {'subheading': 'PostGIS extends PostgreSQL with robust spatial database management capabilities. <a href="http://boundlessgeo.com/solutions/solutions-software/postgis/">More info</a>'}
+html_context = {'subheading': 'PostGIS extends PostgreSQL with robust spatial database management capabilities.'}
 
 # Options for LaTeX output
 # ------------------------

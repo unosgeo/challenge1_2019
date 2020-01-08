@@ -128,8 +128,8 @@ for my $w (keys %workshops)
   print STDERR "  Searching for $conffile...\n";
   print "$srcpath\n";
   @confdirs = ();
-  my $confdir = "";
-  find(\&findconf, $srcpath);
+  my $confdir = "/home/may/Documents/unosgeo/challenge1_2019/workshops/postgis/source/en/";
+  #find(\&findconf, $srcpath);
 
   # No config file, log and continue
   #if ( @confdirs == 0 ) {
@@ -143,26 +143,26 @@ for my $w (keys %workshops)
   #}
 
   # No config file, log and continue
-  if ( @confdirs == 0 ) {
-    print STDERR "  ERROR: Unable to find $conffile in project '$w'\n";
-    next;
-  }
+  #if ( @confdirs == 0 ) {
+  #  print STDERR "  ERROR: Unable to find $conffile in project '$w'\n";
+  #  next;
+  #}
 
   # One config file, store it an move on
-  if ( @confdirs == 1 ) {
-    $confdir = $confdirs[0];
-  }
+  #if ( @confdirs == 1 ) {
+  #  $confdir = $confdirs[0];
+  #}
 
 
   # More than one config file, find an 'en' version
-  else {
-    foreach my $c (@confdirs) {
-      if( $c =~ /\/en/ ) {
-        $confdir = $c;
-        break;
-      }
-    }
-  }
+  #else {
+  #  foreach my $c (@confdirs) {
+  #    if( $c =~ /\/en/ ) {
+  #      $confdir = $c;
+  #      break;
+  #    }
+  #  }
+  #}
   if( $confdir ) {
     print STDERR "  Found $conffile in $confdir\n";
   }
