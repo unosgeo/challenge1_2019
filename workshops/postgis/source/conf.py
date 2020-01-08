@@ -33,15 +33,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'Introduction to PostGIS'
-copyright = u'2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft'
+copyright = u'2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1.0'
+version = '2.0'
 # The full version, including alpha/beta/rc tags.
-release = '1.0'
+release = '2.0'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -79,7 +79,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'boundless_training'
+html_theme = 'sphinxdoc'
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['../../../../themes']
@@ -144,7 +144,7 @@ html_copy_source = False
 htmlhelp_basename = 'GeostackIntro'
 
 # Page subheading
-html_context = {'subheading': 'PostGIS extends PostgreSQL with robust spatial database management capabilities. <a href="http://boundlessgeo.com/solutions/solutions-software/postgis/">More info</a>'}
+html_context = {'subheading': 'PostGIS extends PostgreSQL with robust spatial database management capabilities.'}
 
 # Options for LaTeX output
 # ------------------------
@@ -164,7 +164,7 @@ latex_elements = {
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
   ('index', 'PostGISIntro.tex', u'Introduction to PostGIS',
-   u'Mark Leslie, Paul Ramsey', 'manual', True),
+   u'Mayra Zurbaran, Mark Leslie, Paul Ramsey', 'manual', True),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
