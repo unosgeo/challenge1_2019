@@ -3,13 +3,13 @@
 use File::Find;
 
 my $debug = 0;
-my $gitroot = "/Users/may/Documents/unosgeo/challenge1_2019/";
-my $webroot = "/Users/may/Documents/unosgeo/challenge1_2019/htdocs/";
+my $gitroot = "/home/may/Documents/unosgeo/challenge1_2019/";
+my $webroot = "/home/may/Documents/unosgeo/challenge1_2019/htdocs/";
 my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
 my $confdir = "";
-my $theme = "boundless_web";
+my $theme = "sphinxdoc";
 
 %workshops = 
 (
@@ -126,30 +126,43 @@ for my $w (keys %workshops)
 
   # Search for the Sphinx configuration file location
   print STDERR "  Searching for $conffile...\n";
-  print "$srcpath";
+  print "$srcpath\n";
   @confdirs = ();
-  my $confdir = "";
-  find(\&findconf, $srcpath);
+  my $confdir = "/home/may/Documents/unosgeo/challenge1_2019/workshops/postgis/source/en/";
+  #find(\&findconf, $srcpath);
 
   # No config file, log and continue
-  if ( @confdirs == 0 ) {
-    print STDERR "  ERROR: Unable to find $conffile in project '$w'\n";
-    next;
-  }
+  #if ( @confdirs == 0 ) {
+  #  print STDERR "  ERROR: Unable to find $conffile in project '$w'\n";
+  #  next;
+  #}
 
   # One config file, store it an move on
-  if ( @confdirs == 1 ) {
-    $confdir = $confdirs[0];
-  }
+  #if ( @confdirs == 0 ) {
+  #  $confdir = $confdirs[0];
+  #}
+
+  # No config file, log and continue
+  #if ( @confdirs == 0 ) {
+  #  print STDERR "  ERROR: Unable to find $conffile in project '$w'\n";
+  #  next;
+  #}
+
+  # One config file, store it an move on
+  #if ( @confdirs == 1 ) {
+  #  $confdir = $confdirs[0];
+  #}
+
+
   # More than one config file, find an 'en' version
-  else {
-    foreach my $c (@confdirs) {
-      if( $c =~ /\/en/ ) {
-        $confdir = $c;
-        break;
-      }
-    }
-  }
+  #else {
+  #  foreach my $c (@confdirs) {
+  #    if( $c =~ /\/en/ ) {
+  #      $confdir = $c;
+  #      break;
+  #    }
+  #  }
+  #}
   if( $confdir ) {
     print STDERR "  Found $conffile in $confdir\n";
   }
@@ -176,8 +189,13 @@ for my $w (keys %workshops)
   # and ignore the conf.py in the source tree. We use the -D flag to set the
   # project name to something sensible.
   #
+  print STDERR " Templates path::::: '$templates_path' ";
   print STDERR "  Building HTML using theme '$theme'...\n";
   $cmd = "sphinx-build -b html $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
+  run($cmd);
+  print STDERR "  Build complete.\n";
+  print STDERR "  Building LaTeX using theme '$theme'...\n";
+  $cmd = "sphinx-build -b latex $overrides -d '$tmppath/doctrees' '$confdir' '$webpath/latex'";
   run($cmd);
   print STDERR "  Build complete.\n";
 
@@ -217,4 +235,3 @@ sub findconf
      push(@confdirs, $File::Find::dir);
   }
 }
-
