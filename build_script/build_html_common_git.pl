@@ -9,7 +9,7 @@ my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
 my $confdir = "";
-my $theme = "pyramid";
+my $theme = "sphinxdoc";
 
 %workshops = 
 (
