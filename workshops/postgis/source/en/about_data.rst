@@ -130,7 +130,7 @@ There is a rich collection of social-economic data collected during the census p
    The ``nyc_census_sociodata`` is a data table.  We will need to connect it to Census geographies before conducting any spatial analysis. 
 
 .. list-table::
-   :widths: 20 80
+   :widths: 35 65
 
    * - **tractid**
      - An 11-digit code that uniquely identifies every census **tract**. ("36005000100")
