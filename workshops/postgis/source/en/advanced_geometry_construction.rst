@@ -340,7 +340,7 @@ And now we are ready to go!
 
 Here's what our final table looks like visualized in QGIS:
 
-.. image:: ./advanced_geometry_construction/adv_geom_6_st.png
+.. image:: ./advanced_geometry_construction/adv_geom6_st.png
 
 As usual, there are some problems with our simple understanding of the data:
 
