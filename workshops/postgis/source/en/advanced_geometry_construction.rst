@@ -85,16 +85,16 @@ When you run the query, you get each geometry in the order it is found (which is
   WITH RECURSIVE next_stop(geom, idlist) AS (
       (SELECT 
         geom,
-        ARRAY[gid] AS idlist
+        ARRAY[id] AS idlist
       FROM nyc_subway_stations 
-      WHERE gid = 304)
+      WHERE id = 365)
       UNION ALL
       (SELECT 
         s.geom,
-        array_append(n.idlist, s.gid) AS idlist
+        array_append(n.idlist, s.id) AS idlist
       FROM nyc_subway_stations s, next_stop n
       WHERE strpos(s.routes, 'Q') != 0
-      AND NOT n.idlist @> ARRAY[s.gid]
+      AND NOT n.idlist @> ARRAY[s.id]
       ORDER BY ST_Distance(n.geom, s.geom) ASC
       LIMIT 1)
   )
@@ -102,7 +102,7 @@ When you run the query, you get each geometry in the order it is found (which is
 
 Which looks like this:
 
-.. image:: ./advanced_geometry_construction/adv_geom03.png
+.. image:: ./advanced_geometry_construction/adv_geom3_st.png
    :height: 700px
 
 *Success!*
@@ -116,7 +116,7 @@ Let's tackle the hard problem first, figuring out the first station on a route w
 
 Our 'Q' train stops can serve as a starting point. What characterizes the end stations of the route?
 
-.. image:: ./advanced_geometry_construction/adv_geom01.png
+.. image:: ./advanced_geometry_construction/adv_geom01_st.png
    :height: 700px
 
 One answer is "they are the most northerly and southerly stations". However, imagine if the 'Q' train ran from east to west. Would the condition still hold?
@@ -226,7 +226,7 @@ Now we can find the center point by collecting all the stations for each route i
 
 The center point of the collection of 'Q' train stops looks like this:
 
-.. image:: ./advanced_geometry_construction/adv_geom04.png
+.. image:: ./advanced_geometry_construction/adv_geom04_st.png
    :height: 700px
 
 
@@ -340,7 +340,7 @@ And now we are ready to go!
 
 Here's what our final table looks like visualized in QGIS:
 
-.. image:: ./advanced_geometry_construction/adv_geom_6.png
+.. image:: ./advanced_geometry_construction/adv_geom_6_st.png
 
 As usual, there are some problems with our simple understanding of the data:
 
