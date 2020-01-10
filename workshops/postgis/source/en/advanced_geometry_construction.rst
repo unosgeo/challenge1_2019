@@ -26,8 +26,17 @@ Here are the stops for the 'Q' train:
 
 In this picture, the stops are labelled with their unique ``id`` primary key.
 
-.. image:: ./advanced_geometry_construction/adv_geom01.png
+.. image:: ./advanced_geometry_construction/adv_geom1_st.png
    :height: 700px
+
+To do this in QGIS, import the ``nyc_subway_stations`` through the PostGIS connection and select **Update SQL Layer...**. This will allow you to filter by the above query and get the results shown in the picture.
+
+.. image:: ./advanced_geometry_construction/qgissql_01.png
+   
+There, click **Execute** and **Update**.
+
+.. image:: ./advanced_geometry_construction/qgissql_02.png
+
 
 If we start at one of the end stations, the next station on the line seems to always be the closest. We can repeat the process each time as long as we exclude all the previously found stations from our search.
 
