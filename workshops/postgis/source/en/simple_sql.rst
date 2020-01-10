@@ -27,7 +27,7 @@ and click the **Execute Query** button (again the thunder, but under the *query 
   
 .. image:: ./screenshots/pgadmin_05.png  
 
-The query will run for a few (milli)seconds and return the 129 results.
+The query will run for a few (milli)seconds and return the 129 results. (This info will disappear after a few seconds on the bottom righ of the *results*).
 
 .. image:: ./screenshots/pgadmin_09.png  
 
