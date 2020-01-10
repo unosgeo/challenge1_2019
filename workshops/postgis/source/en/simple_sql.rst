@@ -23,7 +23,7 @@ then enter the following query in to the query window
 
   SELECT name FROM nyc_neighborhoods;
   
-and click the **Execute Query** button (again the thunder).
+and click the **Execute Query** button (again the thunder, but under the *query editor* side).
   
 .. image:: ./screenshots/pgadmin_05.png  
 
