@@ -70,6 +70,15 @@ The data that we will use in this section is world climate data for the period o
 
    raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmax_*.tif rasters.worldclim | psql -d nyc
 
+:Note:   
+The raster2pgsql command is called with the following flags:
+-s: This flag assigns SRID 4326 to the imported rasters.
+-t: This flag denotes the tile size. It chunks the imported rasters into smaller and more manageable pieces; each record added to the table will be at most 100 x 100 pixels.
+-F: This flag adds a column to the table and fills it with the raster's filename.
+-I: This flag creates a GIST spatial index on the table's raster column.
+-C: This flag applies the standard set of constraints on the table. The standard set of constraints includes checks for dimension, scale, skew, upper-left coordinate, and SRID.
+-Y: This flag instructs raster2pgsql to use COPY statements instead of INSERT statements. COPY is typically faster than INSERT.
+
 #. After running ths you'll have added the rasters to the rasters SCHEMA. The terminal output will be:
 
 ::
@@ -374,3 +383,14 @@ The data that we will use in this section is world climate data for the period o
 
 .. image:: ./rasters/rasters_01.png
 
+#. Nos let's import a SRTM layer for the area of New York taken from `http://srtm.csi.cgiar.org/ <http://srtm.csi.cgiar.org/>`_ but that is included in the data bundle.
+
+::
+
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y srtm_20_09/srtm_20_09.tif rasters.srtm_20_09  | psql -d nyc
+   
+#. Verify that this is also reflected in pgAdmin:
+
+.. image:: ./rasters/rasters_02.png
+
+For this tutorial some insights were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
