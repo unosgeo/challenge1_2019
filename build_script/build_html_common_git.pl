@@ -9,7 +9,7 @@ my $tmproot = "/tmp/workshops/";
 my $conffile = "conf.py";
 my @confdirs = ();
 my $confdir = "";
-my $theme = "boundless_web";
+my $theme = "pyramid";
 
 %workshops = 
 (
@@ -179,6 +179,10 @@ for my $w (keys %workshops)
   print STDERR "  Building HTML using theme '$theme'...\n";
   $cmd = "sphinx-build -b html $overrides -d '$tmppath/doctrees' '$confdir' '$webpath'";
   run($cmd);
+  print STDERR "  Building LaTeX using theme '$theme'...\n";
+  $cmd = "sphinx-build -b latex $overrides -d '$tmppath/doctrees' '$confdir' '$webpath/latex'";
+  run($cmd);
+
   print STDERR "  Build complete.\n";
 
 }

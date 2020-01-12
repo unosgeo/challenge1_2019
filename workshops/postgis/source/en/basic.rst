@@ -1,5 +1,5 @@
 PostGIS - Basics
-################
+****************
 
 .. include:: simple_sql.rst
 .. include:: simple_sql_exercises.rst

@@ -1,0 +1,146 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>4.1.1. Windows &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4.1.2. Mac OS X" href="installation_mac.html" />
+    <link rel="prev" title="4. Setup Instructions" href="setup.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation_mac.html" title="4.1.2. Mac OS X"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="setup.html" title="4. Setup Instructions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="setup.html" accesskey="U">4. Setup Instructions</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="windows">
+<span id="installation-win"></span><h1>4.1.1. Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h1>
+<p>For Windows, there is the EnterpriseDB PostgreSQL distributions: <a class="reference external" href="https://www.postgresql.org/download/windows/">https://www.postgresql.org/download/windows/</a>, an interactive installer that will provide the option for installing PostGIS in an installation dialog with “Stack Builder”:</p>
+<ol class="arabic">
+<li><p class="first">First install PostgreSQL with the EDB installer:</p>
+<img alt="_images/windows01.PNG" class="inline" src="_images/windows01.PNG" />
+</li>
+<li><p class="first">Follow the installation process leaving the directories as they are by default and make sure all components (postgreSQL Server, pgAdmin 4, Stack Builder and Command Line Tools) are selected to install.</p>
+<img alt="_images/windows03.PNG" class="inline" src="_images/windows03.PNG" />
+</li>
+<li><p class="first">Set a password that you will use later for login. You may use <code class="docutils literal notranslate"><span class="pre">postgres</span></code>.</p>
+<img alt="_images/windows05.PNG" class="inline" src="_images/windows05.PNG" />
+</li>
+<li><p class="first">Leave the default port to 5432:</p>
+<img alt="_images/windows06.PNG" class="inline" src="_images/windows06.PNG" />
+</li>
+<li><p class="first">At the end of the PostgreSQL installation check the option to launch Stack Builder. This will continue to install PostGIS.</p>
+<img alt="_images/windows09.PNG" class="inline" src="_images/windows09.PNG" />
+</li>
+<li><p class="first">Select the recent PostgreSQL installation:</p>
+<img alt="_images/windows10.PNG" class="inline" src="_images/windows10.PNG" />
+</li>
+<li><p class="first">Search for PostGIS under <strong>Spatial Extensions</strong> and check it.</p>
+<img alt="_images/windows11.PNG" class="inline" src="_images/windows11.PNG" />
+</li>
+<li><p class="first">Follow the installation process and click on <strong>I Agree</strong> in the License Agreement step:</p>
+<img alt="_images/windows14.PNG" class="inline" src="_images/windows14.PNG" />
+</li>
+<li><p class="first">Choose the PostGIS component:</p>
+<img alt="_images/windows15.PNG" class="inline" src="_images/windows15.PNG" />
+</li>
+<li><p class="first">Leave the default directories, <strong>agree to registering the GDAL_DATA environment variable, enable raster drivers, and complete</strong> the installation:</p>
+<img alt="_images/windows20.PNG" class="inline" src="_images/windows20.PNG" />
+</li>
+<li><p class="first">Go to <strong>Start</strong> and look for the PostgreSQL folder where pgAdmin 4 will be located. Open it and set a password to login everytime.</p>
+</li>
+</ol>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="setup.html"
+                        title="previous chapter">4. Setup Instructions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation_mac.html"
+                        title="next chapter">4.1.2. Mac OS X</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="installation_mac.html" title="4.1.2. Mac OS X"
+             >next</a></li>
+        <li class="right" >
+          <a href="setup.html" title="4. Setup Instructions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="setup.html" >4. Setup Instructions</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

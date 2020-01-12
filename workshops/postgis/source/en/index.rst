@@ -32,11 +32,12 @@ Workshop Modules
 ----------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :numbered:
 
    welcome
    introduction
+   instructions
    setup
    basic
    advanced

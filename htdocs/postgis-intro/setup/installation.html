@@ -1,0 +1,170 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>2. Installation &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="../_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="search" title="Search" href="../search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="../index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<span id="id1"></span><h1>2. Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>PostGIS is an extension for the PostgreSQL database to deal with spatial data, so in order to use it we first need an installation of the database engine. The following instructions will guide you using the PostGIS binary installers available from the official project site: <a class="reference external" href="https://postgis.net/install/">https://postgis.net/install/</a>. There are options for multiple platforms.</p>
+<div class="section" id="windows">
+<h2>2.1. Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<p>For Windows, there is the EnterpriseDB PostgreSQL distributions: <a class="reference external" href="https://www.postgresql.org/download/windows/">https://www.postgresql.org/download/windows/</a>, an interactive installer that will provide the option for installing PostGIS in an installation dialog with “Stack Builder”:</p>
+<ol class="arabic">
+<li><p class="first">First install PostgreSQL with the EDB installer:</p>
+<img alt="setup/./screenshots/windows01.PNG" class="inline" src="setup/./screenshots/windows01.PNG" />
+</li>
+<li><p class="first">Follow the installation process leaving the directories as they are by default and make sure all components (postgreSQL Server, pgAdmin 4, Stack Builder and Command Line Tools) are selected to install.</p>
+<img alt="setup/./screenshots/windows03.PNG" class="inline" src="setup/./screenshots/windows03.PNG" />
+</li>
+<li><p class="first">Set a password that you will use later for login. You may use <code class="docutils literal notranslate"><span class="pre">postgres</span></code>.</p>
+<img alt="setup/./screenshots/windows05.PNG" class="inline" src="setup/./screenshots/windows05.PNG" />
+</li>
+<li><p class="first">Leave the default port to 5432:</p>
+<img alt="setup/./screenshots/windows06.PNG" class="inline" src="setup/./screenshots/windows06.PNG" />
+</li>
+<li><p class="first">At the end of the PostgreSQL installation check the option to launch Stack Builder. This will continue to install PostGIS.</p>
+<img alt="setup/./screenshots/windows09.PNG" class="inline" src="setup/./screenshots/windows09.PNG" />
+</li>
+<li><p class="first">Select the recent PostgreSQL installation:</p>
+<img alt="setup/./screenshots/windows10.PNG" class="inline" src="setup/./screenshots/windows10.PNG" />
+</li>
+<li><p class="first">Search for PostGIS under <strong>Spatial Extensions</strong> and check it.</p>
+<img alt="setup/./screenshots/windows11.PNG" class="inline" src="setup/./screenshots/windows11.PNG" />
+</li>
+<li><p class="first">Follow the installation process and click on <strong>I Agree</strong> in the License Agreement step:</p>
+<img alt="setup/./screenshots/windows14.PNG" class="inline" src="setup/./screenshots/windows14.PNG" />
+</li>
+<li><p class="first">Choose the PostGIS component:</p>
+<img alt="setup/./screenshots/windows15.PNG" class="inline" src="setup/./screenshots/windows15.PNG" />
+</li>
+<li><p class="first">Leave the default directories and complete the installation:</p>
+<img alt="setup/./screenshots/windows20.PNG" class="inline" src="setup/./screenshots/windows20.PNG" />
+</li>
+<li><p class="first">Go to <strong>Start</strong> and look for the PostgreSQL folder where pgAdmin 4 will be located. Open it and set a password to login everytime.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="mac-os-x">
+<h2>2.2. Mac OS X<a class="headerlink" href="#mac-os-x" title="Permalink to this headline">¶</a></h2>
+<p>For OSX users it is possile to install PostGIS along with PostgreSQL using the Postgres app: <a class="reference external" href="http://postgresapp.com/">http://postgresapp.com/</a>. This is the easiest way to do the installation but you can also use the EnterpriseDb installer: <a class="reference external" href="https://www.enterprisedb.com/downloads/postgres-postgresql-downloads">https://www.enterprisedb.com/downloads/postgres-postgresql-downloads</a> or the homebrew installer if you are familiar with it by running the command: <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">postgis</span></code>.</p>
+<p>The following steps will guide you in the installation using Postgres.app:</p>
+<ol class="arabic simple">
+<li>Download the dmg file: <a class="reference external" href="https://postgresapp.com/downloads.html">https://postgresapp.com/downloads.html</a>.</li>
+<li>Drag the Postgres icon into your applications folder.</li>
+</ol>
+<blockquote>
+<div><img alt="setup/./screenshots/installosx1.png" class="inline" src="setup/./screenshots/installosx1.png" />
+</div></blockquote>
+<ol class="arabic simple">
+<li>Double click the application and allow it to be opened:</li>
+</ol>
+<blockquote>
+<div><img alt="setup/./screenshots/installosx2.png" class="inline" src="setup/./screenshots/installosx2.png" />
+</div></blockquote>
+<ol class="arabic">
+<li><p class="first">Click initialize to start the process.</p>
+<img alt="setup/./screenshots/installosx3.png" class="inline" src="setup/./screenshots/installosx3.png" />
+</li>
+<li><p class="first">If successful, you will see the databases available to connect to, this means that the database engine is up and running. By clicking the icons of the databases you will be prompted to a command line but for this workshop, the user interface pgAdmin 4 will be preferred.</p>
+<img alt="setup/./screenshots/installosx4.png" class="inline" src="setup/./screenshots/installosx4.png" />
+</li>
+</ol>
+<div class="section" id="install-pgadmin-4-mac-os-x">
+<h3>2.2.1. Install pgAdmin 4 (Mac OS X)<a class="headerlink" href="#install-pgadmin-4-mac-os-x" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">Go to: <a class="reference external" href="https://www.pgadmin.org/download/">https://www.pgadmin.org/download/</a> to get pgAdmin 4 for <strong>Mac OS X</strong>. Double click the installer and agree to the terms by clicking <strong>Agree</strong>.</p>
+<img alt="setup/./screenshots/installpgadmin1.png" class="inline" src="setup/./screenshots/installpgadmin1.png" />
+</li>
+<li><p class="first">For <strong>Mac OS X</strong> drag the pgAdmin 4 icon to your applications folder.</p>
+<img alt="setup/./screenshots/installpgadmin2.png" class="inline" src="setup/./screenshots/installpgadmin2.png" />
+</li>
+<li><p class="first">Open the installed application and allow it to run:</p>
+<img alt="setup/./screenshots/installpgadmin3.png" class="inline" src="setup/./screenshots/installpgadmin3.png" />
+</li>
+<li><p class="first">pgAdmin 4 is web-based so a tab will open in your browser window. The first time, it will prompt for a master password to use, set one, then enter it to see the servers.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="../index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

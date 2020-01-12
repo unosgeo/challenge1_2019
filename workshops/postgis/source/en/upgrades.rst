@@ -27,7 +27,7 @@ Major PostgreSQL Upgrades
 For "major upgrades" there are two ways to carry out the upgrade.
 
 Dump/Restore
-************
+------------
 
 Dumping and restoring involves converting all the data to a platform neutral format (text representations) on dump, and back to native representations on restore, so it can be time consuming and CPU intensive. However, if you are migrating to a new architecture or operating system, it's a required process. It's also a time-tested and well-understood upgrade path, so if your database is not too big, there's no reason not to stick with it.
 
@@ -38,7 +38,7 @@ Dumping and restoring involves converting all the data to a platform neutral for
 * Restore the dump file using ``pg_restore``.
 
 pg_upgrade
-**********
+----------
 
 The pg_upgrade_ utility allows PostgreSQL data directories to be upgraded without the requirement for a dump/restore step. The utility cannot handle changes to the data files themselves, but handles the more common and frequent changes to system tables that occur in PostgreSQL major upgrades.
 
@@ -94,14 +94,14 @@ Then, run the SQL to upgrade your PostGIS extension.
 
 
 Major PostGIS Upgrades
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Major upgrades involve changes to the actual data format for the on-disk storage of geometry and geography data. As such, the data tables need to be re-written. The only way to achieve this is to dump (creating a neutral text-based output) and restore (writing the new table format to disk).
 
 To upgrade, you will have to dump your data first, as discussed in :ref:`backup`.
 
 With Data in Schemas
-********************
+~~~~~~~~~~~~~~~~~~~~
 
 * Dump your data by schema.
 
@@ -127,7 +127,7 @@ With Data in Schemas
       yourschema.backup
 
 Without Data in Schemas
-***********************
+~~~~~~~~~~~~~~~~~~~~~~~
 
 In this case you have to dump the whole database, which means the dump file will contain PostGIS function and type signatures, and old ones at that. Before loading that file back into the new database, we strip out all the PostGIS-specific bits using a magic script from the PostGIS distribution.
 

@@ -1,5 +1,5 @@
 Advanced PostGIS
-################
+****************
 
 .. include:: joins_advanced.rst
 .. include:: validity.rst

@@ -1,0 +1,229 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Equality &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="equality">
+<span id="id1"></span><h1>Equality<a class="headerlink" href="#equality" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id2">
+<h2>Equality<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Determining equality when dealing with geometries can be tricky.  PostGIS supports three different functions that can be used to determine different levels of equality, though for clarity we will use the definitions below.  To illustrate these functions, we will use the following polygons.</p>
+<img alt="_images/polygon-table.png" class="inline" src="_images/polygon-table.png" />
+<p>These polygons are loaded using the following commands.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">polygons</span> <span class="p">(</span><span class="n">id</span> <span class="nb">integer</span><span class="p">,</span> <span class="n">name</span> <span class="nb">varchar</span><span class="p">,</span> <span class="n">poly</span> <span class="n">geometry</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">polygons</span> <span class="k">VALUES</span>
+  <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Polygon 1&#39;</span><span class="p">,</span> <span class="s1">&#39;POLYGON((-1 1.732,1 1.732,2 0,1 -1.732,</span>
+<span class="s1">      -1 -1.732,-2 0,-1 1.732))&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Polygon 2&#39;</span><span class="p">,</span> <span class="s1">&#39;POLYGON((-1 1.732,-2 0,-1 -1.732,1 -1.732,</span>
+<span class="s1">      2 0,1 1.732,-1 1.732))&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;Polygon 3&#39;</span><span class="p">,</span> <span class="s1">&#39;POLYGON((1 -1.732,2 0,1 1.732,-1 1.732,</span>
+<span class="s1">      -2 0,-1 -1.732,1 -1.732))&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Polygon 4&#39;</span><span class="p">,</span> <span class="s1">&#39;POLYGON((-1 1.732,0 1.732, 1 1.732,1.5 0.866,</span>
+<span class="s1">      2 0,1.5 -0.866,1 -1.732,0 -1.732,-1 -1.732,-1.5 -0.866,</span>
+<span class="s1">      -2 0,-1.5 0.866,-1 1.732))&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;Polygon 5&#39;</span><span class="p">,</span> <span class="s1">&#39;POLYGON((-2 -1.732,2 -1.732,2 1.732,</span>
+<span class="s1">      -2 1.732,-2 -1.732))&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="_images/start13.png" src="_images/start13.png" />
+<div class="section" id="exactly-equal">
+<h3>Exactly Equal<a class="headerlink" href="#exactly-equal" title="Permalink to this headline">¶</a></h3>
+<p>Exact equality is determined by comparing two geometries, vertex by vertex, in order, to ensure they are identical in position.  The following examples show how this method can be limited in its effectiveness.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">ST_OrderingEquals</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">poly</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">poly</span><span class="p">)</span>
+    <span class="k">THEN</span> <span class="s1">&#39;Exactly Equal&#39;</span> <span class="k">ELSE</span> <span class="s1">&#39;Not Exactly Equal&#39;</span> <span class="k">end</span>
+  <span class="k">FROM</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">a</span><span class="p">,</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">name</span>    <span class="o">|</span>   <span class="n">name</span>    <span class="o">|</span>       <span class="n">case</span>
+<span class="o">-----------+-----------+-------------------</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Exactly</span> <span class="n">Equal</span>
+</pre></div>
+</div>
+<p>In this example, the polygons are only equal to themselves, not to other seemingly equivalent polygons (as in the case of Polygons 1 through 3).  In the case of Polygons 1, 2, and 3, the vertices are in identical positions but are defined in differing orders.  Polygon 4 has colinear (and thus redundant) vertices on the hexagon edges causing inequality with Polygon 1.</p>
+</div>
+<div class="section" id="spatially-equal">
+<h3>Spatially Equal<a class="headerlink" href="#spatially-equal" title="Permalink to this headline">¶</a></h3>
+<p>As we saw above, exact equality does not take into account the spatial nature of the geometries.  There is an function, aptly named <strong class="command">ST_Equals</strong>, available to test the spatial equality or equivalence of geometries.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">ST_Equals</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">poly</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">poly</span><span class="p">)</span>
+    <span class="k">THEN</span> <span class="s1">&#39;Spatially Equal&#39;</span> <span class="k">ELSE</span> <span class="s1">&#39;Not Equal&#39;</span> <span class="k">end</span>
+  <span class="k">FROM</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">a</span><span class="p">,</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">name</span>    <span class="o">|</span>   <span class="n">name</span>    <span class="o">|</span>      <span class="n">case</span>
+<span class="o">-----------+-----------+-----------------</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Not</span> <span class="n">Equal</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Spatially</span> <span class="n">Equal</span>
+</pre></div>
+</div>
+<p>These results are more in line with our intuitive understanding of equality.  Polygons 1 through 4 are considered equal, since they enclose the same area.  Note that neither the direction of the polygon is drawn, the starting point for defining the polygon, nor the number of points used are important here.  What is important is that the polygons contain the same space.</p>
+</div>
+<div class="section" id="equal-bounds">
+<h3>Equal Bounds<a class="headerlink" href="#equal-bounds" title="Permalink to this headline">¶</a></h3>
+<p>Exact equality requires, in the worst case, comparison of each and every vertex in the geometry to determine equality.  This can be slow, and may not be appropriate for comparing huge numbers of geometries.  To allow for speedier comparison, the equal bounds operator, <strong class="command">=</strong>, is provided.  This operates only on the bounding box (rectangle), ensuring that the geometries occupy the same two dimensional extent, but not necessarily the same space.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="n">a</span><span class="p">.</span><span class="n">poly</span> <span class="o">=</span> <span class="n">b</span><span class="p">.</span><span class="n">poly</span>
+    <span class="k">THEN</span> <span class="s1">&#39;Equal Bounds&#39;</span> <span class="k">ELSE</span> <span class="s1">&#39;Non-equal Bounds&#39;</span> <span class="k">end</span>
+  <span class="k">FROM</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">a</span><span class="p">,</span> <span class="n">polygons</span> <span class="k">as</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">name</span>    <span class="o">|</span>   <span class="n">name</span>    <span class="o">|</span>       <span class="n">case</span>
+<span class="o">-----------+-----------+------------------</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">3</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">Non</span><span class="o">-</span><span class="n">equal</span> <span class="n">Bounds</span>
+ <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Polygon</span> <span class="mi">5</span> <span class="o">|</span> <span class="n">Equal</span> <span class="n">Bounds</span>
+</pre></div>
+</div>
+<p>As you can see, all of our spatially equal geometries also have equal bounds.  Unfortunately, Polygon 5 is also returned as equal under this test, because it shares the same bounding box as the other geometries.  Why is this useful, then?  Although this will be covered in detail later, the shot answer is that this enables the use of spatial indexing that can quickly reduce huge comparison sets into more manageable blocks when joining or filtering data.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

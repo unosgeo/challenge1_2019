@@ -1,0 +1,164 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>1. Welcome &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Introduction" href="introduction.html" />
+    <link rel="prev" title="Introduction to PostGIS" href="index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="introduction.html" title="2. Introduction"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Introduction to PostGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome">
+<span id="id1"></span><h1>1. Welcome<a class="headerlink" href="#welcome" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="workshop-conventions">
+<h2>1.1. Workshop Conventions<a class="headerlink" href="#workshop-conventions" title="Permalink to this headline">¶</a></h2>
+<p>These sections conform to a number of conventions to make it easier to follow the conversation. This section gives a brief overview of what to expect in the way of typographic conventions, as well as a short overview of the structure of each workbook.</p>
+<div class="section" id="directions">
+<h3>1.1.1. Directions<a class="headerlink" href="#directions" title="Permalink to this headline">¶</a></h3>
+<p>Directions for you, the workshop attendee, will be noted by <strong>bold</strong> font.</p>
+<p>For example:</p>
+<blockquote>
+<div>Click <strong>Next</strong> to continue.</div></blockquote>
+</div>
+<div class="section" id="code">
+<h3>1.1.2. Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h3>
+<p>SQL query examples will be displayed in an offset box</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">postgis_full_version</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>These examples can be entered into the query window or command line interface.</p>
+</div>
+<div class="section" id="notes">
+<h3>1.1.3. Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h3>
+<p>Notes are used to provide information that is useful but not critical to the overall understanding of the topic.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you haven’t eaten an apple today, the doctor may be on the way.</p>
+</div>
+</div>
+<div class="section" id="functions">
+<h3>1.1.4. Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<p>Where function names are defined in the text, they will be rendered in a <strong class="command">bold</strong> font.</p>
+<p>For example:</p>
+<blockquote>
+<div><strong class="command">ST_Touches(geometry A, geometry B)</strong> returns TRUE if either of the geometries’ boundaries intersect</div></blockquote>
+</div>
+<div class="section" id="files-tables-and-column-names">
+<h3>1.1.5. Files, Tables and Column Names<a class="headerlink" href="#files-tables-and-column-names" title="Permalink to this headline">¶</a></h3>
+<p>File names, paths, table names and column names will be shown in <code class="docutils literal notranslate"><span class="pre">fixed-width</span></code> font.</p>
+<p>For example:</p>
+<blockquote>
+<div>Select the <code class="docutils literal notranslate"><span class="pre">name</span></code> column in the <code class="docutils literal notranslate"><span class="pre">nyc_streets</span></code> table.</div></blockquote>
+</div>
+<div class="section" id="menus-and-form-elements">
+<h3>1.1.6. Menus and Form elements<a class="headerlink" href="#menus-and-form-elements" title="Permalink to this headline">¶</a></h3>
+<p>Menus/submenus and form elements such as fields or check boxes and other on-screen artifacts are displayed in <em>italics</em>.</p>
+<p>For example:</p>
+<blockquote>
+<div>Click on the <em>File &gt; New</em> menu. Check the box that says <em>Confirm</em>.</div></blockquote>
+</div>
+<div class="section" id="workflow">
+<h3>1.1.7. Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h3>
+<p>Sections are designed to be progressive. Each section will start with the assumption that you have completed and understood the previous section in the series and will build on that knowledge. A single section will progress through a handful of ideas and provide working examples wherever possible. At the end of a section, where appropriate, we have included a handful of exercises to allow you to try out the ideas we’ve presented. In some cases the section will include “Things To Try”. These tasks contain more complex problems than the exercises and is designed to challenge participants with advanced knowledge.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Welcome</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#workshop-conventions">1.1. Workshop Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Introduction to PostGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="next chapter">2. Introduction</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="introduction.html" title="2. Introduction"
+             >next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Introduction to PostGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

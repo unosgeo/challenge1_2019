@@ -1,8 +1,7 @@
 workshops/geoserver/intro/build/
 workshops/geoserver/adv/build/
-
-
-
+htdocs
+themes
 workshops/geowebcache
 workshops/geogig/build
 workshops/geogig/doc/doctrees

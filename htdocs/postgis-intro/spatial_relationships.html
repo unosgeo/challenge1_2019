@@ -1,0 +1,230 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spatial Relationships &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spatial-relationships">
+<span id="id1"></span><h1>Spatial Relationships<a class="headerlink" href="#spatial-relationships" title="Permalink to this headline">¶</a></h1>
+<p>So far we have only used spatial functions that measure (<strong class="command">ST_Area</strong>, <strong class="command">ST_Length</strong>), serialize (<strong class="command">ST_AsGML</strong>), and deserialize (<strong class="command">ST_GeomFromText</strong>) geometries. What these functions have in common is that they only work on one geometry at a time.</p>
+<p>Spatial databases are powerful because they not only store geometry, they also have the ability to compare <em>relationships between geometries</em>.</p>
+<p>Questions like “Which are the closest bike racks to a park?” or “Where are the intersections of subway lines and streets?” can only be answered by comparing geometries representing the bike racks, streets, and subway lines.</p>
+<p>The OGC standard defines the following set of methods to compare geometries.</p>
+<div class="section" id="st-equals">
+<h2>ST_Equals<a class="headerlink" href="#st-equals" title="Permalink to this headline">¶</a></h2>
+<p><strong class="command">ST_Equals(geometry A, geometry B)</strong> tests the spatial equality of two geometries.</p>
+<div class="figure align-center">
+<img alt="_images/st_equals.png" src="_images/st_equals.png" />
+</div>
+<p>ST_Equals returns TRUE if two geometries of the same type have identical x,y coordinate values, i.e. if the second shape is equal (identical) to the first shape.</p>
+<p>First, let’s retrieve a representation of a point from our <code class="docutils literal notranslate"><span class="pre">nyc_subway_stations</span></code> table. We’ll take just the entry for ‘Broad St’.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span><span class="p">,</span> <span class="n">geom</span><span class="p">,</span> <span class="n">ST_AsText</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">nyc_subway_stations</span>
+<span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Broad St&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">name</span>   <span class="o">|</span>                      <span class="n">geom</span>                          <span class="o">|</span>      <span class="n">st_astext</span>
+<span class="o">----------+----------------------------------------------------+-----------------------</span>
+ <span class="n">Broad</span> <span class="n">St</span> <span class="o">|</span> <span class="mi">0101000020266900000</span><span class="n">EEBD4CF27CF2141BC17D69516315141</span> <span class="o">|</span> <span class="n">POINT</span><span class="p">(</span><span class="mi">583571</span> <span class="mi">4506714</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then, plug the geometry representation back into an <strong class="command">ST_Equals</strong> test:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span>
+<span class="k">FROM</span> <span class="n">nyc_subway_stations</span>
+<span class="k">WHERE</span> <span class="n">ST_Equals</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="s1">&#39;0101000020266900000EEBD4CF27CF2141BC17D69516315141&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Broad</span> <span class="n">St</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The representation of the point was not very human readable (<code class="docutils literal notranslate"><span class="pre">0101000020266900000EEBD4CF27CF2141BC17D69516315141</span></code>) but it was an exact representation of the coordinate values. For a test like equality, using the exact coordinates is necessary.</p>
+</div>
+</div>
+<div class="section" id="st-intersects-st-disjoint-st-crosses-and-st-overlaps">
+<h2>ST_Intersects, ST_Disjoint, ST_Crosses and ST_Overlaps<a class="headerlink" href="#st-intersects-st-disjoint-st-crosses-and-st-overlaps" title="Permalink to this headline">¶</a></h2>
+<p><strong class="command">ST_Intersects</strong>, <strong class="command">ST_Crosses</strong>, and <strong class="command">ST_Overlaps</strong> test whether the interiors of the geometries intersect.</p>
+<div class="figure align-center">
+<img alt="_images/st_intersects.png" src="_images/st_intersects.png" />
+</div>
+<p><strong class="command">ST_Intersects(geometry A, geometry B)</strong> returns t (TRUE) if the two shapes have any space in common, i.e., if their boundaries or interiors intersect.</p>
+<div class="figure align-center">
+<img alt="_images/st_disjoint.png" src="_images/st_disjoint.png" />
+</div>
+<p>The opposite of ST_Intersects is <strong class="command">ST_Disjoint(geometry A , geometry B)</strong>. If two geometries are disjoint, they do not intersect, and vice-versa. In fact, it is often more efficient to test “not intersects” than to test “disjoint” because the intersects tests can be spatially indexed, while the disjoint test cannot.</p>
+<div class="figure align-center">
+<img alt="_images/st_crosses.png" src="_images/st_crosses.png" />
+</div>
+<p>For multipoint/polygon, multipoint/linestring, linestring/linestring, linestring/polygon, and linestring/multipolygon comparisons, <strong class="command">ST_Crosses(geometry A, geometry B)</strong> returns t (TRUE) if the intersection results in a geometry whose dimension is one less than the maximum dimension of the two source geometries and the intersection set is interior to both source geometries.</p>
+<div class="figure align-center">
+<img alt="_images/st_overlaps.png" src="_images/st_overlaps.png" />
+</div>
+<p><strong class="command">ST_Overlaps(geometry A, geometry B)</strong> compares two geometries of the same dimension and returns TRUE if their intersection set results in a geometry different from both but of the same dimension.</p>
+<p>Let’s take our Broad Street subway station and determine its neighborhood using the <strong class="command">ST_Intersects</strong> function:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span><span class="p">,</span> <span class="n">ST_AsText</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">nyc_subway_stations</span>
+<span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Broad St&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POINT</span><span class="p">(</span><span class="mi">583571</span> <span class="mi">4506714</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span><span class="p">,</span> <span class="n">boroname</span>
+<span class="k">FROM</span> <span class="n">nyc_neighborhoods</span>
+<span class="k">WHERE</span> <span class="n">ST_Intersects</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">ST_GeomFromText</span><span class="p">(</span><span class="s1">&#39;POINT(583571 4506714)&#39;</span><span class="p">,</span><span class="mi">26918</span><span class="p">));</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="n">name</span>        <span class="o">|</span> <span class="n">boroname</span>
+<span class="o">--------------------+-----------</span>
+ <span class="n">Financial</span> <span class="n">District</span> <span class="o">|</span> <span class="n">Manhattan</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="st-touches">
+<h2>ST_Touches<a class="headerlink" href="#st-touches" title="Permalink to this headline">¶</a></h2>
+<p><strong class="command">ST_Touches</strong> tests whether two geometries touch at their boundaries, but do not intersect in their interiors</p>
+<div class="figure align-center">
+<img alt="_images/st_touches.png" src="_images/st_touches.png" />
+</div>
+<p><strong class="command">ST_Touches(geometry A, geometry B)</strong> returns TRUE if either of the geometries’ boundaries intersect or if only one of the geometry’s interiors intersects the other’s boundary.</p>
+</div>
+<div class="section" id="st-within-and-st-contains">
+<h2>ST_Within and ST_Contains<a class="headerlink" href="#st-within-and-st-contains" title="Permalink to this headline">¶</a></h2>
+<p><strong class="command">ST_Within</strong> and <strong class="command">ST_Contains</strong> test whether one geometry is fully within the other.</p>
+<div class="figure align-center">
+<img alt="_images/st_within.png" src="_images/st_within.png" />
+</div>
+<p><strong class="command">ST_Within(geometry A , geometry B)</strong> returns TRUE if the first geometry is completely within the second geometry. ST_Within tests for the exact opposite result of ST_Contains.</p>
+<p><strong class="command">ST_Contains(geometry A, geometry B)</strong> returns TRUE if the second geometry is completely contained by the first geometry.</p>
+</div>
+<div class="section" id="st-distance-and-st-dwithin">
+<h2>ST_Distance and ST_DWithin<a class="headerlink" href="#st-distance-and-st-dwithin" title="Permalink to this headline">¶</a></h2>
+<p>An extremely common GIS question is “find all the stuff within distance X of this other stuff”.</p>
+<p>The <strong class="command">ST_Distance(geometry A, geometry B)</strong> calculates the <em>shortest</em> distance between two geometries and returns it as a float. This is useful for actually reporting back the distance between objects.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">ST_Distance</span><span class="p">(</span>
+  <span class="n">ST_GeometryFromText</span><span class="p">(</span><span class="s1">&#39;POINT(0 5)&#39;</span><span class="p">),</span>
+  <span class="n">ST_GeometryFromText</span><span class="p">(</span><span class="s1">&#39;LINESTRING(-2 2, 2 2)&#39;</span><span class="p">));</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">3</span>
+</pre></div>
+</div>
+<p>For testing whether two objects are within a distance of one another, the <strong class="command">ST_DWithin</strong> function provides an index-accelerated true/false test. This is useful for questions like “how many trees are within a 500 meter buffer of the road?”. You don’t have to calculate an actual buffer, you just have to test the distance relationship.</p>
+<div class="figure align-center">
+<img alt="_images/st_dwithin.png" src="_images/st_dwithin.png" />
+</div>
+<p>Using our Broad Street subway station again, we can find the streets nearby (within 10 meters of) the subway stop:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span>
+<span class="k">FROM</span> <span class="n">nyc_streets</span>
+<span class="k">WHERE</span> <span class="n">ST_DWithin</span><span class="p">(</span>
+        <span class="n">geom</span><span class="p">,</span>
+        <span class="n">ST_GeomFromText</span><span class="p">(</span><span class="s1">&#39;POINT(583571 4506714)&#39;</span><span class="p">,</span><span class="mi">26918</span><span class="p">),</span>
+        <span class="mi">10</span>
+      <span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">name</span>
+<span class="o">--------------</span>
+   <span class="n">Wall</span> <span class="n">St</span>
+   <span class="n">Broad</span> <span class="n">St</span>
+   <span class="n">Nassau</span> <span class="n">St</span>
+</pre></div>
+</div>
+<p>And we can verify the answer on a map. The Broad St station is actually at the intersection of Wall, Broad and Nassau Streets.</p>
+<img alt="_images/broad_st.jpg" src="_images/broad_st.jpg" />
+</div>
+<div class="section" id="function-list">
+<h2>Function List<a class="headerlink" href="#function-list" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Contains.html">ST_Contains(geometry A, geometry B)</a>: Returns true if and only if no points of B lie in the exterior of A, and at least one point of the interior of B lies in the interior of A.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Crosses.html">ST_Crosses(geometry A, geometry B)</a>: Returns TRUE if the supplied geometries have some, but not all, interior points in common.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Disjoint.html">ST_Disjoint(geometry A , geometry B)</a>: Returns TRUE if the Geometries do not “spatially intersect” - if they do not share any space together.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Distance.html">ST_Distance(geometry A, geometry B)</a>: Returns the 2-dimensional cartesian minimum distance (based on spatial ref) between two geometries in projected units.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_DWithin.html">ST_DWithin(geometry A, geometry B, radius)</a>: Returns true if the geometries are within the specified distance (radius) of one another.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Equals.html">ST_Equals(geometry A, geometry B)</a>: Returns true if the given geometries represent the same geometry. Directionality is ignored.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Intersects.html">ST_Intersects(geometry A, geometry B)</a>: Returns TRUE if the Geometries/Geography “spatially intersect” - (share any portion of space) and FALSE if they don’t (they are Disjoint).</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Overlaps.html">ST_Overlaps(geometry A, geometry B)</a>: Returns TRUE if the Geometries share space, are of the same dimension, but are not completely contained by each other.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Touches.html">ST_Touches(geometry A, geometry B)</a>: Returns TRUE if the geometries have at least one point in common, but their interiors do not intersect.</p>
+<p><a class="reference external" href="http://postgis.net/docs/manual-2.1/ST_Within.html">ST_Within(geometry A , geometry B)</a>: Returns true if the geometry A is completely inside geometry B</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

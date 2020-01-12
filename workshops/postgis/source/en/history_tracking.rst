@@ -126,7 +126,7 @@ Now that the history table is enabled, we can make edits on the main table and w
 Note the power of this database-backed approach to history: **no matter what tool is used to make the edits, whether the SQL command line, a web-based JDBC tool, or a desktop tool like QGIS, the history is consistently tracked.**
 
 SQL Edits
-*********
+---------
 
 Let's turn the two streets named "Cumberland Walk" to the more stylish "Cumberland Wynde":
 
