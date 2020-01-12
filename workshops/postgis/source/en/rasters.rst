@@ -9,13 +9,13 @@ Some definitions to consider:
 #. raster is the PostGIS data type for storing the raster files in PostgreSQL.
 #. Tile: This is a small chunk of the original raster file to be stored in one column of a table's row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.
 
-For this section let's create a new schema where we will keep the objects for working with rasters. On your PGAdmin *query editor* write:
+For this section let's create a new schema where we will keep the objects for working with rasters. On your pgAdmin *query editor* write:
 
 .. code-block:: sql
 
    CREATE SCHEMA rasters;
    
-The data that we will use in this section is world climate data for the period of 1970-2000 provided by `worldclim <http://worldclim.org/version2>`_ but you can find it in the data folder **raster** of this tutorial.
+The data that we will use in this section is world climate data for the period of 1970-2000 by 10 min resolution provided by `worldclim <http://worldclim.org/version2>`_ but you can find it in the data folder **raster** of this tutorial.
 
 #. First, let's inspect the ``wc2.0_10m_tmax_01.tif`` raster file using GDAL, you can install GDAL for unix/MAC using the binaries from `this site <https://sandbox.idre.ucla.edu/sandbox/general/how-to-install-and-run-gdal>`_ or using the `OSGeoW <https://trac.osgeo.org/osgeo4w/>`_ suite for Windows, which will provide all the packages you need. You can also open the raster with QGIS and inspect its metadata.
 
@@ -58,4 +58,319 @@ The data that we will use in this section is world climate data for the period o
       
 #. From this information we know the coodinate system of the raster, the limits, pixel size, and some statistics on the values it contains.
 
-#. Now we're ready to load the raster into our database using ``raster2pgsql``.   raster2pgsql -s 4326 -t 100x100 -F -I-C -Y wc2.0_10m_tmax_*.tif rasters.worldclim | psql -d postgis
+#. For the next steps make sure you have postgreSQL binaries added to your path if not already added, for Mac this is done by:
+ 
+::
+
+   export PATH="/Applications/Postgres.app/Contents/Versions/11/bin:$PATH"
+
+#. Now we're ready to load the rasters into our database using ``raster2pgsql``.
+
+::
+
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmax_*.tif rasters.worldclim | psql -d nyc
+
+#. After running ths you'll have added the rasters to the rasters SCHEMA. The terminal output will be:
+
+::
+
+   Processing 1/12: wc2.0_10m_tmax_01.tif
+   BEGIN
+   CREATE TABLE
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 2/12: wc2.0_10m_tmax_02.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 3/12: wc2.0_10m_tmax_03.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 4/12: wc2.0_10m_tmax_04.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 5/12: wc2.0_10m_tmax_05.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 6/12: wc2.0_10m_tmax_06.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 7/12: wc2.0_10m_tmax_07.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 8/12: wc2.0_10m_tmax_08.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 9/12: wc2.0_10m_tmax_09.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 10/12: wc2.0_10m_tmax_10.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 11/12: wc2.0_10m_tmax_11.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   Processing 12/12: wc2.0_10m_tmax_12.tif
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   COPY 11
+   CREATE INDEX
+   ANALYZE
+   NOTICE:  Adding SRID constraint
+   NOTICE:  Adding scale-X constraint
+   NOTICE:  Adding scale-Y constraint
+   NOTICE:  Adding blocksize-X constraint
+   NOTICE:  Adding blocksize-Y constraint
+   NOTICE:  Adding alignment constraint
+   NOTICE:  Adding number of bands constraint
+   NOTICE:  Adding pixel type constraint
+   NOTICE:  Adding nodata value constraint
+   NOTICE:  Adding out-of-database constraint
+   NOTICE:  Adding maximum extent constraint
+    addrasterconstraints 
+   ----------------------
+    t
+   (1 row)
+
+#. You can now verify this on pgAdmin, the rasters have been loaded in the ``worldclim`` table under the rasters SCHEMA:
+
+.. image:: ./rasters/rasters_01.png
+
