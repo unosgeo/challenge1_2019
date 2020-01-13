@@ -441,6 +441,19 @@ Some of the results of this query are shown on the below table (because there ar
    
 10. Now let's use the `ST_Metadata() <https://postgis.net/docs/RT_ST_MetaData.html>`_ to see the metadata for a single raster:
 
+.. code-block:: sql
 
+  SELECT  rid,  (ST_Metadata(rast)).*
+  FROM rasters.worldclim_tmax
+  WHERE filename = 'wc2.0_10m_tmax_01.tif'
+  LIMIT 1;
+  
+The output will be for the average maximun temperature of the first month (January).
+
+::  
+
+    rid | upperleftx | upperlefty | width | height |      scalex       |       scaley       | skewx | skewy | srid | numbands 
+   -----+------------+------------+-------+--------+-------------------+--------------------+-------+-------+------+----------
+      1 |       -180 |         90 |   100 |    100 | 0.166666666666667 | -0.166666666666667 |     0 |     0 | 4326 |        1
 
 For this tutorial some insights were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
