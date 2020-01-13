@@ -426,7 +426,7 @@ The data that we will use in this section is world climate data for the period o
    FROM raster_columns WHERE r_table_name = 'worldclim_tmax';
 
 
-Some of the results of this query are shown on the above table (because there are too many attributes):
+Some of the results of this query are shown on the below table (because there are too many attributes):
 
 ::
 
@@ -435,6 +435,11 @@ Some of the results of this query are shown on the above table (because there ar
    worldclim_tmax  | rast            | 4326 | 0.1666666667 | -0.1666666667 | 100         | 100 
 
 
+.. note::
+
+   Seeing this, the blocksize specified for ``x`` and ``y`` while loading the data worked!
+   
+10. Now let's use the `ST_Metadata() <https://postgis.net/docs/RT_ST_MetaData.html>`_ to see the metadata for a single raster:
 
 
 
