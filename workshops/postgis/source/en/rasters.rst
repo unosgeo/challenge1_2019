@@ -6,8 +6,8 @@ Before going further, we should describe what a raster is and what a raster is u
 
 Some definitions to consider:
 
-#. raster is the PostGIS data type for storing the raster files in PostgreSQL.
-#. Tile: This is a small chunk of the original raster file to be stored in one column of a table's row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.
+* raster is the PostGIS data type for storing the raster files in PostgreSQL.
+* Tile: This is a small chunk of the original raster file to be stored in one column of a table's row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.
 
 For this section let's create a new schema where we will keep the objects for working with rasters. On your pgAdmin *query editor* write:
 
@@ -17,7 +17,7 @@ For this section let's create a new schema where we will keep the objects for wo
    
 The data that we will use in this section is world climate data for the period of 1970-2000 by 10 min resolution provided by `worldclim <http://worldclim.org/version2>`_ but you can find it in the data folder **raster** of this tutorial.
 
-#. First, let's inspect the ``wc2.0_10m_tmax_01.tif`` raster file using GDAL, you can install GDAL for unix/MAC using the binaries from `this site <https://sandbox.idre.ucla.edu/sandbox/general/how-to-install-and-run-gdal>`_ or using the `OSGeoW <https://trac.osgeo.org/osgeo4w/>`_ suite for Windows, which will provide all the packages you need. You can also open the raster with QGIS and inspect its metadata.
+1. First, let's inspect the ``wc2.0_10m_tmax_01.tif`` raster file using GDAL, you can install GDAL for unix/MAC using the binaries from `this site <https://sandbox.idre.ucla.edu/sandbox/general/how-to-install-and-run-gdal>`_ or using the `OSGeoW <https://trac.osgeo.org/osgeo4w/>`_ suite for Windows, which will provide all the packages you need. You can also open the raster with QGIS and inspect its metadata.
 
 ::
 
@@ -56,30 +56,37 @@ The data that we will use in this section is world climate data for the period o
       STATISTICS_MINIMUM=-39.707750263214
       STATISTICS_STDDEV=1.#SNAN
       
-#. From this information we know the coodinate system of the raster, the limits, pixel size, and some statistics on the values it contains.
+2. From this information we know the coodinate system of the raster, the limits, pixel size, and some statistics on the values it contains.
 
-#. For the next steps make sure you have postgreSQL binaries added to your path if not already added, for Mac this is done by:
+3. For the next steps make sure you have postgreSQL binaries added to your path if not already added, for Mac this is done by:
  
 ::
 
    export PATH="/Applications/Postgres.app/Contents/Versions/11/bin:$PATH"
 
-#. Now we're ready to load the rasters into our database using ``raster2pgsql``.
+4. Now we're ready to load the rasters of maximum temperature into our database using ``raster2pgsql``.
 
 ::
 
-   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmax_*.tif rasters.worldclim | psql -d nyc
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmax_*.tif rasters.worldclim_tmax | psql -d nyc
+   
+5. Now let's load the rasters of minimum temperatur into our database using ``raster2pgsql``.
 
-:Note:   
-The raster2pgsql command is called with the following flags:
--s: This flag assigns SRID 4326 to the imported rasters.
--t: This flag denotes the tile size. It chunks the imported rasters into smaller and more manageable pieces; each record added to the table will be at most 100 x 100 pixels.
--F: This flag adds a column to the table and fills it with the raster's filename.
--I: This flag creates a GIST spatial index on the table's raster column.
--C: This flag applies the standard set of constraints on the table. The standard set of constraints includes checks for dimension, scale, skew, upper-left coordinate, and SRID.
--Y: This flag instructs raster2pgsql to use COPY statements instead of INSERT statements. COPY is typically faster than INSERT.
+::
 
-#. After running ths you'll have added the rasters to the rasters SCHEMA. The terminal output will be:
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmin_*.tif rasters.worldclim_tmin | psql -d nyc
+
+.. note::
+
+   The raster2pgsql command is called with the following flags:
+   -s: This flag assigns SRID 4326 to the imported rasters.
+   -t: This flag denotes the tile size. It chunks the imported rasters into smaller and more manageable pieces; each record added to the table will be at most 100 x 100 pixels.
+   -F: This flag adds a column to the table and fills it with the raster's filename.
+   -I: This flag creates a GIST spatial index on the table's raster column.
+   -C: This flag applies the standard set of constraints on the table. The standard set of constraints includes checks for dimension, scale, skew, upper-left coordinate, and SRID.
+   -Y: This flag instructs raster2pgsql to use COPY statements instead of INSERT statements. COPY is typically faster than INSERT.
+
+6. After running ths you'll have added the rasters to the rasters SCHEMA. The terminal output will be:
 
 ::
 
@@ -378,8 +385,11 @@ The raster2pgsql command is called with the following flags:
    ----------------------
     t
    (1 row)
+.. note::
 
-#. You can now verify this on pgAdmin, the rasters have been loaded in the ``worldclim`` table under the rasters SCHEMA:
+   A similar output will be generated for the minimum temperature rasters.
+
+7. You can now verify this on pgAdmin, the rasters have been loaded in the ``worldclim`` table under the rasters SCHEMA:
 
 .. image:: ./rasters/rasters_01.png
 
@@ -389,8 +399,43 @@ The raster2pgsql command is called with the following flags:
 
    raster2pgsql -s 4326 -t 100x100 -F -I -C -Y srtm_20_09/srtm_20_09.tif rasters.srtm_20_09  | psql -d nyc
    
-#. Verify that this is also reflected in pgAdmin:
+8. Verify that this is also reflected in pgAdmin:
 
 .. image:: ./rasters/rasters_02.png
+
+
+9. Now let's obtain some information on the rasters within the database, for this, run the folloquin SQL command:
+
+.. code-block:: sql
+
+  SELECT
+        r_table_name,
+        r_raster_column,
+        srid,
+        scale_x,
+        scale_y,
+        blocksize_x,
+        blocksize_y,
+        same_alignment,
+        regular_blocking,
+        num_bands,
+        pixel_types,
+        nodata_values,
+        out_db,
+        ST_AsText(extent) AS extent
+   FROM raster_columns WHERE r_table_name = 'worldclim_tmax';
+
+
+Some of the results of this query are shown on the above table (because there are too many attributes):
+
+::
+
+     r_table_name  | r_raster_column | srid |   scale_x    |    scale_y    | blocksize_x | blocksize_y
+   ----------------+-----------------+------+--------------+---------------+-------------+-------------
+   worldclim_tmax  | rast            | 4326 | 0.1666666667 | -0.1666666667 | 100         | 100 
+
+
+
+
 
 For this tutorial some insights were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
