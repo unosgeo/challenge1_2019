@@ -1,5 +1,8 @@
 .. _working_with_rasters:
 
+Working with Rasters
+====================
+
 In this section you will learn to load a raster, get basic information on the raster, process and analyze it.
 
 Before going further, we should describe what a raster is and what a raster is used for. At the simplest level, a raster is a photo or image with information describing where to place the raster on the Earth's surface. A photograph typically has three sets of values, one set for each primary color (red, green, and blue). A raster also has sets of values, often more than those found in a photograph. Each set of values is known as a band. So, a photograph typically has three bands while a raster has at least one band. As with digital photographs, rasters come in a variety of file formats. Common raster formats you may come across include PNG, JPEG, GeoTIFF, HDF5, and NetCDF. Since rasters can have many bands and even more values, they can be used to store large quantities of data in an efficient manner. Due to their efficiency, rasters are used for satellite and aerial sensors and modeled surfaces, such as weather forecasts.
@@ -456,4 +459,159 @@ The output will be for the average maximun temperature of the first month (Janua
    -----+------------+------------+-------+--------+-------------------+--------------------+-------+-------+------+----------
       1 |       -180 |         90 |   100 |    100 | 0.166666666666667 | -0.166666666666667 |     0 |     0 | 4326 |        1
 
-For this tutorial some insights were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
+11. Now with `ST_BandMetadata() <https://postgis.net/docs/RT_ST_BandMetaData.html>`_ let's obtain some metadata on the raster's tile only band at the record 23.
+
+.. code-block:: sql
+
+   SELECT  rid,  (ST_BandMetadata(rast, 1)).*
+   FROM rasters.worldclim_tmax
+   WHERE rid = 23;
+   
+::
+
+    rid | pixeltype |      nodatavalue      | isoutdb | path | outdbbandnum | filesize | filetimestamp 
+   -----+-----------+-----------------------+---------+------+--------------+----------+---------------
+     23 | 32BF      | -3.39999995214436e+38 | f       |      |              |          |              
+
+12. Results for worldclim_tmin:
+
+.. code-block:: sql
+
+   SELECT  rid,  (ST_BandMetadata(rast, 1)).*
+   FROM rasters.worldclim_tmin
+   WHERE rid = 23;
+
+::
+
+    rid | pixeltype |      nodatavalue      | isoutdb | path | outdbbandnum | filesize | filetimestamp 
+   -----+-----------+-----------------------+---------+------+--------------+----------+---------------
+     23 | 32BF      | -3.39999995214436e+38 | f       |      |              |          |              
+
+13. Now let's use `ST_SummaryStats() <https://postgis.net/docs/RT_ST_SummaryStats.html>`_ to compute a summary of statistics comprising: count, sum, mean, stddev, min, max for the given raster band (worldclim_tmax and then wordclim_tmin).
+
+.. code-block:: sql
+
+   WITH stats AS (  
+   SELECT    (ST_SummaryStats(rast, 1)).*  FROM rasters.worldclim_tmax  WHERE rid = 23
+   )
+   SELECT  count,  sum,  round(mean::numeric, 2) AS mean,  round(stddev::numeric, 2) AS stddev,  min,  max
+   FROM stats;
+
+::
+
+    count |        sum        |  mean  | stddev |        min        | max 
+   -------+-------------------+--------+--------+-------------------+-----
+     1818 | -26097.0808352232 | -14.35 |   4.14 | -25.9260864257812 |   0
+
+14. And for worldclim_tmin (remember to included the SCHEMA before the table - rasters.wordlclim_tmin):
+
+.. code-block:: sql
+
+   WITH stats AS (  
+   SELECT    (ST_SummaryStats(rast, 1)).*  FROM rasters.worldclim_tmin  WHERE rid = 23
+   )
+   SELECT  count,  sum,  round(mean::numeric, 2) AS mean,  round(stddev::numeric, 2) AS stddev,  min,  max
+   FROM stats;
+   
+::
+
+    count |       sum        |  mean  | stddev |        min        | max 
+   -------+------------------+--------+--------+-------------------+-----
+     1818 | -39561.697756052 | -21.76 |   4.19 | -30.7347507476807 |   0
+
+.. note::
+
+   In the summary statistics, the count indicates that the raster tile is about 80 percent NODATA. But what is calls for attentions is that the mean, min, and max values do not make sense for minimum/maximum temperature values. This is because the rasters we are analyzing show the average monthly min/max from 1970-2000.
+
+15. Now let's use `ST_Histogram() <https://postgis.net/docs/RT_ST_Histogram.html>`_ to see how the values are distributed:
+
+.. code-block:: sql
+
+   WITH hist AS (
+        SELECT
+                (ST_Histogram(rast, 1)).*
+        FROM rasters.worldclim_tmax
+        WHERE rid = 23
+   )
+   SELECT
+           round(min::numeric, 2) AS min,
+           round(max::numeric, 2) AS max,
+           count,
+           round(percent::numeric, 2) AS percent
+   FROM hist
+   ORDER BY min;
+
+
+::
+
+     min   |  max   | count | percent 
+   --------+--------+-------+---------
+    -25.93 | -23.77 |    25 |    0.01
+    -23.77 | -21.61 |    50 |    0.03
+    -21.61 | -19.44 |   132 |    0.07
+    -19.44 | -17.28 |   214 |    0.12
+    -17.28 | -15.12 |   347 |    0.19
+    -15.12 | -12.96 |   403 |    0.22
+    -12.96 | -10.80 |   247 |    0.14
+    -10.80 |  -8.64 |   280 |    0.15
+     -8.64 |  -6.48 |    77 |    0.04
+     -6.48 |  -4.32 |    29 |    0.02
+     -4.32 |  -2.16 |     1 |    0.00
+     -2.16 |   0.00 |    13 |    0.01
+     
+16. Another way to see how the pixel values are distributed is to use `ST_Quantile() <https://postgis.net/docs/RT_ST_Quantile.html>`_.
+
+.. note::
+
+    Looks like 78 percent of all values are at -12.96 or below.
+
+.. code-block::
+
+   SELECT
+        (ST_Quantile(rast, 1)).*
+   FROM rasters.worldclim_tmax
+   WHERE rid = 23;
+   
+::
+
+    quantile |       value       
+   ----------+-------------------
+           0 | -25.9260864257812
+        0.25 |  -16.999062538147
+         0.5 |  -14.526111125946
+        0.75 | -11.1928572654724
+           1 |                 0
+           
+.. note::
+
+   This shows againg that 75 percent of the values align with wath previouly seen, that they are below of -16.99.
+   
+17. Let's check the 10 top occurring values in the raster tile with `ST_ValueCount() <https://postgis.net/docs/RT_ST_ValueCount.html>`_.
+
+.. code-block::
+
+   SELECT
+     (ST_ValueCount(rast, 1)).*
+   FROM rasters.worldclim_tmax
+   WHERE rid = 23
+   ORDER BY count DESC, value
+   LIMIT 10;
+   
+::
+
+          value       | count 
+   -------------------+-------
+                    0 |     6
+    -21.2382507324219 |     2
+                  -17 |     2
+    -16.8117504119873 |     2
+    -16.7112503051758 |     2
+    -16.7000007629395 |     2
+    -16.0542507171631 |     2
+    -14.7344999313354 |     2
+      -14.66100025177 |     2
+    -14.6262502670288 |     2
+
+
+
+For this tutorial some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
