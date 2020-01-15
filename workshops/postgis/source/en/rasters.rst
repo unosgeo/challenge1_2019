@@ -396,7 +396,7 @@ The data that we will use in this section is world climate data for the period o
 
 .. image:: ./rasters/rasters_01.png
 
-#. Nos let's import a SRTM layer for the area of New York taken from `http://srtm.csi.cgiar.org/ <http://srtm.csi.cgiar.org/>`_ but that is included in the data bundle.
+#. Nos let's import a SRTM layer for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
 
 ::
 
@@ -676,6 +676,9 @@ The output will be for the average maximun temperature of the first month (Janua
    -------------------
     -5.88770508766174
     
+
+24. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
+The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel.
 
 
 
