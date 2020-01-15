@@ -683,7 +683,7 @@ The output will be for the average maximun temperature of the first month (Janua
 .. code-block::
 
    CREATE TABLE rasters.srtm AS
-   SELECT ST_Union(rast, 1)
+   SELECT ST_Union(rast, 1) as rast
    FROM (SELECT rast FROM rasters.srtm1
        UNION ALL
        SELECT rast FROM rasters.srtm2) foo
@@ -711,7 +711,9 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
       CROSS JOIN cx
       CROSS JOIN borough_boundaries ny;
 
+.. note::
 
+   This query may take a few seconds/minutes to finish for the raster calculation it's doing, be patient. You can create a table to visualize it then in QGIS.
 
 
 For this course some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
