@@ -654,7 +654,7 @@ The output will be for the average maximun temperature of the first month (Janua
    ------------------
     5.22810506820679
     
-23. We can run the same for the minimum temperature as well for January and you are encouraged to try differet months by changing the filename:
+23. We can run the same for the minimum temperature as well for January and you are encouraged to try different months by changing the filename:
 
 .. code-block::
 
