@@ -586,7 +586,7 @@ The output will be for the average maximun temperature of the first month (Janua
 
    This shows againg that 75 percent of the values align with wath previouly seen, that they are below of -16.99.
    
-17. Let's check the 10 top occurring values in the raster tile with `ST_ValueCount() <https://postgis.net/docs/RT_ST_ValueCount.html>`_.
+17. Let's check the 10 top occurring values in the raster tile with `ST_ValueCount() <https://postgis.net/docs/RT_ST_ValueCount.html>`_. You can do this also for ``worldclim_tmin``.
 
 .. code-block::
 
@@ -612,6 +612,71 @@ The output will be for the average maximun temperature of the first month (Janua
       -14.66100025177 |     2
     -14.6262502670288 |     2
 
+18. Since we are to look at rasters in the context of New York, an easy question to ask is: what was the mean max/min temperature for 1970-2000 in New York? Let's import a shapefile containing just the boundaries of the city ``borough_boundaries``, this is contained in the data bundle for this course. To import it let's leave the EPSG: 4326 to match our rasters and follow the next screenshots to import it with QGIS:
+
+19. Selecting the public SCHEMA (since this one is not a raster) using the DB Manager, click on ``ìmport layer/File..`` 
+
+.. image:: ./rasters/rasters_03.png
+::inline::
+
+20. Select the ``borough_boundaries``from the rasters data bundle directory.
+
+.. image:: ./rasters/rasters_04.png
+::inline::
+
+21. Let's select EPSG:4326 for compatibility with our rasters.
+
+.. image:: ./rasters/rasters_05.png
+::inline::
 
 
-For this tutorial some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
+22. Now let's run the following SQL query to see the mean maximum temperature in January for the period of 1970-2000:
+
+.. code-block::
+
+   SELECT (
+        ST_SummaryStats(
+                ST_Union(
+                        ST_Clip(tmax.rast, 1, ny.geom, TRUE)
+                ),
+                1
+              )
+      ).mean
+      FROM rasters.worldclim_tmax as tmax
+      JOIN borough_boundaries ny
+              ON ST_Intersects(tmax.rast, ny.geom)
+      WHERE tmax.filename = 'wc2.0_10m_tmax_01.tif';
+
+::
+
+          mean       
+   ------------------
+    5.22810506820679
+    
+23. We can run the same for the minimum temperature as well for January and you are encouraged to try differet months by changing the filename:
+
+.. code-block::
+
+   SELECT (
+        ST_SummaryStats(
+                ST_Union(
+                        ST_Clip(tmin.rast, 1, ST_Transform(ny.geom, 4326), TRUE)
+                ),
+                1
+              )
+      ).mean
+      FROM rasters.worldclim_tmin as tmin
+      JOIN borough_boundaries ny
+              ON ST_Intersects(tmin.rast, ST_Transform(ny.geom, 4326))
+      WHERE tmin.filename = 'wc2.0_10m_tmin_01.tif';
+      
+::
+
+          mean        
+   -------------------
+    -5.88770508766174
+    
+
+
+
+For this course some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
