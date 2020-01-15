@@ -396,7 +396,7 @@ The data that we will use in this section is world climate data for the period o
 
 .. image:: ./rasters/rasters_01.png
 
-#. Nos let's import two SRTM layers for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
+8. Now let's import two SRTM layers for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
 
 ::
 
