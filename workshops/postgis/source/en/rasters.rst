@@ -396,11 +396,12 @@ The data that we will use in this section is world climate data for the period o
 
 .. image:: ./rasters/rasters_01.png
 
-#. Nos let's import a SRTM layer for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
+#. Nos let's import two SRTM layers for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
 
 ::
 
-   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y srtm_20_09/srtm_20_09.tif rasters.srtm_20_09  | psql -d nyc
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y N40W074.hgt rasters.srtm1  | psql -d nyc
+   raster2pgsql -s 4326 -t 100x100 -F -I -C -Y N40W075.hgt rasters.srtm2  | psql -d nyc
    
 8. Verify that this is also reflected in pgAdmin:
 
@@ -677,8 +678,39 @@ The output will be for the average maximun temperature of the first month (Janua
     -5.88770508766174
     
 
-24. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
-The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel.
+24. Since we are working with two rasters to cover the extent of New York, let's first create a single raster table to work with:
+
+.. code-block::
+
+   CREATE TABLE rasters.srtm AS
+   SELECT ST_Union(rast, 1)
+   FROM (SELECT rast FROM rasters.srtm1
+       UNION ALL
+       SELECT rast FROM rasters.srtm2) foo
+
+25. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
+The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let's use 26918 as the projection that best fits our purpose and to be able to use `ST_DWithin <https://postgis.net/docs/ST_DWithin.html>`_.
+
+.. code-block:: 
+
+   WITH r AS ( -- union of filtered tiles
+        SELECT
+                ST_Transform(ST_Union(srtm.rast), 26918) AS rast
+        FROM rasters.srtm as srtm
+        JOIN borough_boundaries ny
+                ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
+      ), cx AS ( -- custom extent
+              SELECT
+                      ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
+              FROM borough_boundaries ny
+              CROSS JOIN r
+      )
+      SELECT
+              ST_Clip(ST_Slope(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
+      FROM r
+      CROSS JOIN cx
+      CROSS JOIN borough_boundaries ny;
+
 
 
 
