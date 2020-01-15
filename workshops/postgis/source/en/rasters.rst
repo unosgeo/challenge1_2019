@@ -9,7 +9,7 @@ Before going further, we should describe what a raster is and what a raster is u
 
 Some definitions to consider:
 
-* raster is the PostGIS data type for storing the raster files in PostgreSQL.
+* Raster is the PostGIS data type for storing the raster files in PostgreSQL.
 * Tile: This is a small chunk of the original raster file to be stored in one column of a table's row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.
 
 For this section let's create a new schema where we will keep the objects for working with rasters. On your pgAdmin *query editor* write:
@@ -713,7 +713,7 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
 
 .. note::
 
-   This query may take a few seconds/minutes to finish for the raster calculation it's doing, be patient. You can create a table to visualize it then in QGIS.
+   These queries may take a few seconds/minutes to finish for the raster calculations it's doing, be patient. You can create a table to visualize it then in QGIS.
 
 
 For this course some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
