@@ -714,6 +714,19 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
 .. note::
 
    These queries may take a few seconds/minutes to finish for the raster calculations it's doing, be patient. You can create a table to visualize it then in QGIS.
+   
+26. You will notice that QGIS does not show your raster layers as it does with the vector ones. There's a workaround this. Go to the DB Manager and there will be listed all your raster tables, click on the desired one to and and select **Add to Canvas**.
+
+.. image:: ./rasters/rasters_06.png
+::inline::
+
+The following image shows the two SRTM covering New York already unioned.
+
+.. image:: ./rasters/rasters_07.png
+::inline::
+
+27. We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.
+
 
 
 For this course some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
