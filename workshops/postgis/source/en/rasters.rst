@@ -12,7 +12,7 @@ Some definitions to consider:
 * Raster is the PostGIS data type for storing the raster files in PostgreSQL.
 * Tile: This is a small chunk of the original raster file to be stored in one column of a table's row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.
 
-For this section let's create a new schema where we will keep the objects for working with rasters. On your pgAdmin *query editor* write:
+For this section let's create a new ``SCHEMA`` where we will keep the objects for working with rasters. On your pgAdmin *query editor* write:
 
 .. code-block:: sql
 
@@ -59,7 +59,7 @@ The data that we will use in this section is world climate data for the period o
       STATISTICS_MINIMUM=-39.707750263214
       STATISTICS_STDDEV=1.#SNAN
       
-2. From this information we know the coodinate system of the raster, the limits, pixel size, and some statistics on the values it contains.
+2. From this information we know the coodinate reference system of the raster, the limits, pixel size, and some statistics on the values it contains.
 
 3. For the next steps make sure you have postgreSQL binaries added to your path if not already added, for Mac this is done by:
  
@@ -73,7 +73,7 @@ The data that we will use in this section is world climate data for the period o
 
    raster2pgsql -s 4326 -t 100x100 -F -I -C -Y wc2.0_10m_tmax_*.tif rasters.worldclim_tmax | psql -d nyc
    
-5. Now let's load the rasters of minimum temperatur into our database using ``raster2pgsql``.
+5. Now let's load the rasters of minimum temperature into our database using ``raster2pgsql``.
 
 ::
 
@@ -410,7 +410,7 @@ The data that we will use in this section is world climate data for the period o
    :class: inline
 
 
-9. Now let's obtain some information on the rasters within the database, for this, run the folloquin SQL command:
+9. Now let's obtain some information on the rasters within the database, for this, run the following SQL command:
 
 .. code-block:: sql
 
@@ -432,7 +432,7 @@ The data that we will use in this section is world climate data for the period o
    FROM raster_columns WHERE r_table_name = 'worldclim_tmax';
 
 
-Some of the results of this query are shown on the below table (because there are too many attributes):
+Only some of the results of this query are shown on the below table (because there are too many attributes):
 
 ::
 
@@ -524,7 +524,7 @@ The output will be for the average maximun temperature of the first month (Janua
 
 .. note::
 
-   In the summary statistics, the count indicates that the raster tile is about 80 percent NODATA. But what is calls for attentions is that the mean, min, and max values do not make sense for minimum/maximum temperature values. This is because the rasters we are analyzing show the average monthly min/max from 1970-2000.
+   In the summary statistics, the count indicates that the raster tile is about 80 percent NODATA. Remember the rasters we are analyzing show the average monthly min/max from 1970-2000, therefore the values may not match recent years.
 
 15. Now let's use `ST_Histogram() <https://postgis.net/docs/RT_ST_Histogram.html>`_ to see how the values are distributed:
 
@@ -691,7 +691,7 @@ The output will be for the average maximun temperature of the first month (Janua
        SELECT rast FROM rasters.srtm2) foo
 
 25. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
-The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let's use 26918 as the projection that best fits our purpose and to be able to use `ST_DWithin <https://postgis.net/docs/ST_DWithin.html>`_.
+The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let's use EPSG:26918 as the projection that best fits our purpose and to be able to use `ST_DWithin <https://postgis.net/docs/ST_DWithin.html>`_.
 
 .. code-block:: 
 
