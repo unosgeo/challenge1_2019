@@ -1,4 +1,5 @@
 .. _instructions:
+
 Learning Outcomes
 =================
 
@@ -17,8 +18,7 @@ Learning Outcomes
 Prerequisite Knowledge
 ----------------------
 
-For this training it is required an understanding of relational databases, tables, indexing, and the SQL language. Overall knowledge of spatial data formats and features is also necessary.
-Basic knowledge of the use of QGIS is desired for handling, visualizing, and styling vector and rasters layers.
+For this training a basic understanding of relational database technology (tables, indexing, and the SQL language) is required. The course contains some explanations of spatial data formats and types, but a knowledge of spatial theory and some prior experience with spatial data would enhance the learning. Basic knowledge of the use of a GIS (e.g. QGIS) is desired for handling, visualizing, and styling vector and rasters layers.
 
 Educational Approach
 --------------------
