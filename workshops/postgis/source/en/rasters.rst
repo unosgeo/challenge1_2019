@@ -395,6 +395,7 @@ The data that we will use in this section is world climate data for the period o
 7. You can now verify this on pgAdmin, the rasters have been loaded in the ``worldclim`` table under the rasters SCHEMA:
 
 .. image:: ./rasters/rasters_01.png
+   :class: inline
 
 8. Now let's import two SRTM layers for New York taken from `https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/ <https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/>`_ but that is included in the data bundle. New york is splitted into two SRTM raster images ``N40W074.hgt`` and ``N40W075.hgt``.
 
@@ -406,6 +407,7 @@ The data that we will use in this section is world climate data for the period o
 8. Verify that this is also reflected in pgAdmin:
 
 .. image:: ./rasters/rasters_02.png
+   :class: inline
 
 
 9. Now let's obtain some information on the rasters within the database, for this, run the folloquin SQL command:
@@ -618,17 +620,17 @@ The output will be for the average maximun temperature of the first month (Janua
 19. Selecting the public SCHEMA (since this one is not a raster) using the DB Manager, click on ``ìmport layer/File..`` 
 
 .. image:: ./rasters/rasters_03.png
-::inline::
+   :class: inline
 
 20. Select the ``borough_boundaries``from the rasters data bundle directory.
 
 .. image:: ./rasters/rasters_04.png
-::inline::
+   :class: inline
 
 21. Let's select EPSG:4326 for compatibility with our rasters.
 
 .. image:: ./rasters/rasters_05.png
-::inline::
+   :class: inline
 
 
 22. Now let's run the following SQL query to see the mean maximum temperature in January for the period of 1970-2000:
@@ -718,12 +720,12 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
 26. You will notice that QGIS does not show your raster layers as it does with the vector ones. There's a workaround this. Go to the DB Manager and there will be listed all your raster tables, click on the desired one to and and select **Add to Canvas**.
 
 .. image:: ./rasters/rasters_06.png
-::inline::
+   :class: inline
 
 The following image shows the two SRTM covering New York already unioned.
 
 .. image:: ./rasters/rasters_07.png
-::inline::
+   :class: inline
 
 27. We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.
 
