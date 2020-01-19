@@ -24,7 +24,7 @@ Inside the data bundle, you will find:
   a directory containing this HTML workshop
 
 **data/**
-  a directory containing the shapefiles we will be loading
+  a directory containing the shapefiles and necesary data for the raster section we will be loading
 
 All the data in the package is public domain and freely redistributable. All the software in the package is open source, and freely redistributable. This workshop is licensed as Creative Commons "`share alike with attribution <http://creativecommons.org/licenses/by-sa/3.0/us/>`_", and is freely redistributable under the terms of that license.
 

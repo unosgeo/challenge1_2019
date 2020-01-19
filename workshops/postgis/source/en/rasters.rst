@@ -1,4 +1,4 @@
-.. _working_with_rasters:
+.. _rasters:
 
 Working with Rasters
 ====================
@@ -18,7 +18,7 @@ For this section let's create a new ``SCHEMA`` where we will keep the objects fo
 
    CREATE SCHEMA rasters;
    
-The data that we will use in this section is world climate data for the period of 1970-2000 by 10 min resolution provided by `worldclim <http://worldclim.org/version2>`_ but you can find it in the data folder **raster** of this tutorial.
+The data that we will use in this section is world climate data for the period of 1970-2000 by 10 min resolution provided by `worldclim <http://worldclim.org/version2>`_ but you can find it in the data folder **raster** of this tutorial, unzip it.
 
 1. First, let's inspect the ``wc2.0_10m_tmax_01.tif`` raster file using GDAL, you can install GDAL for unix/MAC using the binaries from `this site <https://sandbox.idre.ucla.edu/sandbox/general/how-to-install-and-run-gdal>`_ or using the `OSGeoW <https://trac.osgeo.org/osgeo4w/>`_ suite for Windows, which will provide all the packages you need. You can also open the raster with QGIS and inspect its metadata.
 
