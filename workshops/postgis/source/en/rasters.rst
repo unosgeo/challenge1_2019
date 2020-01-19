@@ -689,8 +689,16 @@ The output will be for the average maximun temperature of the first month (Janua
    FROM (SELECT rast FROM rasters.srtm1
        UNION ALL
        SELECT rast FROM rasters.srtm2) foo
+       
+25. Since the geometries of the shapefile of New York are also seperate let's create a unified one for further processsing:
 
-25. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
+.. code-block::
+
+   CREATE TABLE singleny AS
+   SELECT ST_Union(ny.geom) AS geom
+   FROM borough_boundaries ny
+
+26. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
 The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let's use EPSG:26918 as the projection that best fits our purpose and to be able to use `ST_DWithin <https://postgis.net/docs/ST_DWithin.html>`_.
 
 .. code-block:: 
@@ -699,25 +707,25 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
         SELECT
                 ST_Transform(ST_Union(srtm.rast), 26918) AS rast
         FROM rasters.srtm as srtm
-        JOIN borough_boundaries ny
+        JOIN singleny ny
                 ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
       ), cx AS ( -- custom extent
               SELECT
                       ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
-              FROM borough_boundaries ny
+              FROM singleny ny
               CROSS JOIN r
       )
       SELECT
               ST_Clip(ST_Slope(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
       FROM r
       CROSS JOIN cx
-      CROSS JOIN borough_boundaries ny;
+      CROSS JOIN singleny ny;
 
 .. note::
 
    These queries may take a few seconds/minutes to finish for the raster calculations it's doing, be patient. You can create a table to visualize it then in QGIS.
    
-26. You will notice that QGIS does not show your raster layers as it does with the vector ones. There's a workaround this. Go to the DB Manager and there will be listed all your raster tables, click on the desired one to and and select **Add to Canvas**.
+27. You will notice that QGIS does not show your raster layers as it does with the vector ones. There's a workaround this. Go to the DB Manager and there will be listed all your raster tables, click on the desired one to and and select **Add to Canvas**.
 
 .. image:: ./rasters/rasters_06.png
    :class: inline
@@ -726,6 +734,12 @@ The following image shows the two SRTM covering New York already unioned.
 
 .. image:: ./rasters/rasters_07.png
    :class: inline
+
+This is how the slope looks with the Magma style applieto it, we can se how areas like Manhattan have higher elevation that others:
+
+.. image:: ./rasters/rasters_08.png
+   :class: inline
+
 
 27. We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.
 
