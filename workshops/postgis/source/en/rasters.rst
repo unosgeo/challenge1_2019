@@ -735,7 +735,7 @@ The following image shows the two SRTM covering New York already unioned.
 .. image:: ./rasters/rasters_07.png
    :class: inline
 
-This is how the slope looks with the Magma style applieto it, we can se how areas like Manhattan have higher elevation that others:
+This is how the slope looks with the Magma style applied to it, we can se how areas like Manhattan have higher elevation than others:
 
 .. image:: ./rasters/rasters_08.png
    :class: inline
@@ -743,6 +743,30 @@ This is how the slope looks with the Magma style applieto it, we can se how area
 
 27. We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.
 
+.. code-block::
+
+   WITH r AS ( -- union of filtered tiles
+        SELECT
+                ST_Transform(ST_Union(srtm.rast), 26918) AS rast
+        FROM rasters.srtm srtm
+        JOIN singleny ny
+                ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
+      ), cx AS ( -- custom extent
+              SELECT
+                      ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
+              FROM singleny ny
+              CROSS JOIN r
+      )
+      SELECT
+              ST_Clip(ST_HillShade(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
+      FROM r
+      CROSS JOIN cx
+      CROSS JOIN singleny ny;
+      
+The output visualized looks like this:
+
+.. image:: ./rasters/rasters_09.png
+   :class: inline
 
 
 For this course some instructions were taken from the `PostGIS Cookbook 2nd Edition <https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def>`_, you're welcome to go further into it.
