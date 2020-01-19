@@ -704,22 +704,22 @@ The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_S
 .. code-block:: 
 
    WITH r AS ( -- union of filtered tiles
-        SELECT
-                ST_Transform(ST_Union(srtm.rast), 26918) AS rast
-        FROM rasters.srtm as srtm
-        JOIN singleny ny
-                ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
-      ), cx AS ( -- custom extent
-              SELECT
-                      ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
-              FROM singleny ny
-              CROSS JOIN r
-      )
-      SELECT
-              ST_Clip(ST_Slope(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
-      FROM r
-      CROSS JOIN cx
-      CROSS JOIN singleny ny;
+     SELECT
+             ST_Transform(ST_Union(srtm.rast), 26918) AS rast
+     FROM rasters.srtm as srtm
+     JOIN singleny ny
+             ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
+   ), cx AS ( -- custom extent
+           SELECT
+                   ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
+           FROM singleny ny
+           CROSS JOIN r
+   )
+   SELECT
+           ST_Clip(ST_Slope(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
+   FROM r
+   CROSS JOIN cx
+   CROSS JOIN singleny ny;
 
 .. note::
 
@@ -746,22 +746,22 @@ This is how the slope looks with the Magma style applied to it, we can se how ar
 .. code-block::
 
    WITH r AS ( -- union of filtered tiles
-        SELECT
-                ST_Transform(ST_Union(srtm.rast), 26918) AS rast
-        FROM rasters.srtm srtm
-        JOIN singleny ny
-                ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
-      ), cx AS ( -- custom extent
-              SELECT
-                      ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
-              FROM singleny ny
-              CROSS JOIN r
-      )
-      SELECT
-              ST_Clip(ST_HillShade(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
-      FROM r
-      CROSS JOIN cx
-      CROSS JOIN singleny ny;
+     SELECT
+             ST_Transform(ST_Union(srtm.rast), 26918) AS rast
+     FROM rasters.srtm srtm
+     JOIN singleny ny
+             ON ST_DWithin(ST_Transform(srtm.rast::geometry, 26918), ST_Transform(ny.geom, 26918), 1000)
+   ), cx AS ( -- custom extent
+           SELECT
+                   ST_AsRaster(ST_Transform(ny.geom, 26918), r.rast) AS rast
+           FROM singleny ny
+           CROSS JOIN r
+   )
+   SELECT
+           ST_Clip(ST_HillShade(r.rast, 1, cx.rast), ST_Transform(ny.geom, 26918)) AS rast
+   FROM r
+   CROSS JOIN cx
+   CROSS JOIN singleny ny;
       
 The output visualized looks like this:
 
