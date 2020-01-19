@@ -568,7 +568,7 @@ The output will be for the average maximun temperature of the first month (Janua
 
     Looks like 78 percent of all values are at -12.96 or below.
 
-.. code-block::
+.. code-block:: sql
 
    SELECT
         (ST_Quantile(rast, 1)).*
@@ -591,7 +591,7 @@ The output will be for the average maximun temperature of the first month (Janua
    
 17. Let's check the 10 top occurring values in the raster tile with `ST_ValueCount() <https://postgis.net/docs/RT_ST_ValueCount.html>`_. You can do this also for ``worldclim_tmin``.
 
-.. code-block::
+.. code-block:: sql
 
    SELECT
      (ST_ValueCount(rast, 1)).*
@@ -635,7 +635,7 @@ The output will be for the average maximun temperature of the first month (Janua
 
 22. Now let's run the following SQL query to see the mean maximum temperature in January for the period of 1970-2000:
 
-.. code-block::
+.. code-block:: sql
 
    SELECT (
         ST_SummaryStats(
@@ -658,7 +658,7 @@ The output will be for the average maximun temperature of the first month (Janua
     
 23. We can run the same for the minimum temperature as well for January and you are encouraged to try different months by changing the filename:
 
-.. code-block::
+.. code-block:: sql
 
    SELECT (
         ST_SummaryStats(
@@ -682,7 +682,7 @@ The output will be for the average maximun temperature of the first month (Janua
 
 24. Since we are working with two rasters to cover the extent of New York, let's first create a single raster table to work with:
 
-.. code-block::
+.. code-block:: sql
 
    CREATE TABLE rasters.srtm AS
    SELECT ST_Union(rast, 1) as rast
@@ -692,7 +692,7 @@ The output will be for the average maximun temperature of the first month (Janua
        
 25. Since the geometries of the shapefile of New York are also seperate let's create a unified one for further processsing:
 
-.. code-block::
+.. code-block:: sql
 
    CREATE TABLE singleny AS
    SELECT ST_Union(ny.geom) AS geom
@@ -701,7 +701,7 @@ The output will be for the average maximun temperature of the first month (Janua
 26. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
 The two queries below use variants of `ST_Slope() <https://postgis.net/docs/RT_ST_Slope.html>`_ and `ST_HillShade() <https://postgis.net/docs/RT_ST_HillShade.html>`_ that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let's generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let's use EPSG:26918 as the projection that best fits our purpose and to be able to use `ST_DWithin <https://postgis.net/docs/ST_DWithin.html>`_.
 
-.. code-block:: 
+.. code-block:: sql
 
    WITH r AS ( -- union of filtered tiles
      SELECT
@@ -743,7 +743,7 @@ This is how the slope looks with the Magma style applied to it, we can se how ar
 
 27. We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.
 
-.. code-block::
+.. code-block:: sql
 
    WITH r AS ( -- union of filtered tiles
      SELECT
