@@ -11,3 +11,4 @@ Advanced PostGIS
 .. include:: knn.rst
 .. include:: history_tracking.rst
 .. include:: advanced_geometry_construction.rst
+.. include:: rasters.rst
