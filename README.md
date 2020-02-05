@@ -1,4 +1,8 @@
-# challenge1_2019
+# UNOSGEO challenge 2019
+
+This is the repository for the material for training of PostGIS for the United Nations by the UNOSGEO Challenge 2019.
+
+The material ready to use is under postgis-workshop-2020 in the form of HTML website of as a PDF document.
 
 In order to build the website, run the script with the following command: `perl build_script/build_html_common_git.pl`
 
