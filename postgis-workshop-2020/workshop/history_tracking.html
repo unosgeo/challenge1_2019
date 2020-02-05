@@ -1,0 +1,253 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tracking Edit History using Triggers &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tracking-edit-history-using-triggers">
+<span id="history-tracking"></span><h1>Tracking Edit History using Triggers<a class="headerlink" href="#tracking-edit-history-using-triggers" title="Permalink to this headline">¶</a></h1>
+<p>A common requirement for production databases is the ability to track history: how has the data changed between two dates, who made the changes, and where did they occur? Some GIS systems track changes by including change management in the client interface, but that adds a lot of complexity to editing tools.</p>
+<p>Using the database and the trigger system, it’s possible to add history tracking to any table, while maintaining simple “direct edit” access to the primary table.</p>
+<p>History tracking works by keeping a history table that records, for every edit:</p>
+<ul class="simple">
+<li>If a record was created, when it was added and by whom.</li>
+<li>If a record was deleted, when it was deleted and by whom.</li>
+<li>If a record was updated, adding a deletion record (for the old state) and a creation record (for the new state).</li>
+</ul>
+<div class="section" id="building-the-history-table">
+<h2>Building the History Table<a class="headerlink" href="#building-the-history-table" title="Permalink to this headline">¶</a></h2>
+<p>Using this information it is possible to reconstruct the state of the edit table at any point in time. In this example, we will add history tracking to our <strong>nyc_streets</strong> table.</p>
+<ul>
+<li><p class="first">First, add a new <strong>nyc_streets_history</strong> table. This is the table we will use to store all the historical edit information. In addition to all the fields from <strong>nyc_streets</strong>, we add five more fields.</p>
+<ul class="simple">
+<li><strong>hid</strong> the primary key for the history table</li>
+<li><strong>created</strong> the date/time the history record was created</li>
+<li><strong>created_by</strong> the database user that caused the record to be created</li>
+<li><strong>deleted</strong> the date/time the history record was marked as deleted</li>
+<li><strong>deleted_by</strong> the database user that caused the record to be marked as deleted</li>
+</ul>
+<p>Note that we don’t actually delete any records in the history table, we just mark the time they ceased to be part of the current state of the edit table.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">nyc_streets_history</span> <span class="p">(</span>
+  <span class="n">hid</span> <span class="nb">SERIAL</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+  <span class="n">id</span> <span class="n">FLOAT8</span><span class="p">,</span>
+  <span class="n">name</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">200</span><span class="p">),</span>
+  <span class="n">oneway</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+  <span class="k">type</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span>
+  <span class="n">geom</span> <span class="n">GEOMETRY</span><span class="p">(</span><span class="n">MultiLinestring</span><span class="p">,</span><span class="mi">26918</span><span class="p">),</span>
+  <span class="n">created</span> <span class="k">TIMESTAMP</span><span class="p">,</span>
+  <span class="n">created_by</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
+  <span class="n">deleted</span> <span class="k">TIMESTAMP</span><span class="p">,</span>
+  <span class="n">deleted_by</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Next, we import the current state of the active table, <strong>nyc_streets</strong> into the history table, so we have a starting point to trace history from. Note that we fill in the creation time and creation user, but leave the deletion records NULL.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">nyc_streets_history</span>
+  <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">oneway</span><span class="p">,</span> <span class="k">type</span><span class="p">,</span> <span class="n">geom</span><span class="p">,</span> <span class="n">created</span><span class="p">,</span> <span class="n">created_by</span><span class="p">)</span>
+   <span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">oneway</span><span class="p">,</span> <span class="k">type</span><span class="p">,</span> <span class="n">geom</span><span class="p">,</span> <span class="n">now</span><span class="p">(),</span> <span class="k">current_user</span>
+   <span class="k">FROM</span> <span class="n">nyc_streets</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Now we need three triggers on the active table, for INSERT, DELETE and UPDATE actions. First we create the trigger functions, then bind them to the table as triggers.</p>
+<p>For an insert, we just add a new record into the history table with the creation time/user:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE OR REPLACE FUNCTION nyc_streets_insert() RETURNS trigger AS
+$$
+  BEGIN
+    INSERT INTO nyc_streets_history
+      (id, name, oneway, type, geom, created, created_by)
+    VALUES
+      (NEW.id, NEW.name, NEW.oneway, NEW.type, NEW.geom,
+       current_timestamp, current_user);
+    RETURN NEW;
+  END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER nyc_streets_insert_trigger
+AFTER INSERT ON nyc_streets
+  FOR EACH ROW EXECUTE PROCEDURE nyc_streets_insert();
+</pre></div>
+</div>
+<p>For a deletion, we just mark the currently active history record (the one with a NULL deletion time) as deleted:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE OR REPLACE FUNCTION nyc_streets_delete() RETURNS trigger AS
+$$
+  BEGIN
+    UPDATE nyc_streets_history
+      SET deleted = current_timestamp, deleted_by = current_user
+      WHERE deleted IS NULL and id = OLD.id;
+    RETURN NULL;
+  END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER nyc_streets_delete_trigger
+AFTER DELETE ON nyc_streets
+  FOR EACH ROW EXECUTE PROCEDURE nyc_streets_delete();
+</pre></div>
+</div>
+<p>For an update, we first mark the active history record as deleted, then insert a new record for the updated state:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE OR REPLACE FUNCTION nyc_streets_update() RETURNS trigger AS
+$$
+  BEGIN
+
+    UPDATE nyc_streets_history
+      SET deleted = current_timestamp, deleted_by = current_user
+      WHERE deleted IS NULL and id = OLD.id;
+
+    INSERT INTO nyc_streets_history
+      (id, name, oneway, type, geom, created, created_by)
+    VALUES
+      (NEW.id, NEW.name, NEW.oneway, NEW.type, NEW.geom,
+       current_timestamp, current_user);
+
+    RETURN NEW;
+
+  END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER nyc_streets_update_trigger
+AFTER UPDATE ON nyc_streets
+  FOR EACH ROW EXECUTE PROCEDURE nyc_streets_update();
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="editing-the-table">
+<h2>Editing the Table<a class="headerlink" href="#editing-the-table" title="Permalink to this headline">¶</a></h2>
+<p>Now that the history table is enabled, we can make edits on the main table and watch the log entries appear in the history table.</p>
+<p>Note the power of this database-backed approach to history: <strong>no matter what tool is used to make the edits, whether the SQL command line, a web-based JDBC tool, or a desktop tool like QGIS, the history is consistently tracked.</strong></p>
+<div class="section" id="sql-edits">
+<h3>SQL Edits<a class="headerlink" href="#sql-edits" title="Permalink to this headline">¶</a></h3>
+<p>Let’s turn the two streets named “Cumberland Walk” to the more stylish “Cumberland Wynde”:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">UPDATE</span> <span class="n">nyc_streets</span>
+<span class="k">SET</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Cumberland Wynde&#39;</span>
+<span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Cumberland Walk&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Updating the two streets will cause the original streets to be marked as deleted in the history table, with a deletion time of now, and two new streets with the new name added, with an addition time of now. You can inspect the historical records:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">nyc_streets</span> <span class="k">WHERE</span> <span class="n">name</span> <span class="k">LIKE</span> <span class="s1">&#39;Cumberland W%&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The results will look like:</p>
+<blockquote>
+<div><img alt="_images/history01.png" class="inline" src="_images/history01.png" />
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="querying-the-history-table">
+<h2>Querying the History Table<a class="headerlink" href="#querying-the-history-table" title="Permalink to this headline">¶</a></h2>
+<p>Now that we have a history table, what use is it? It’s useful for time travel! To travel to a particular time <strong>T</strong>, you need to construct a query that includes:</p>
+<ul class="simple">
+<li>All records created before T, and not yet deleted; and also</li>
+<li>All records created before T, but deleted <strong>after</strong> T.</li>
+</ul>
+<p>We can use this logic to create a query, or a view, of the state of the data in the past. Since presumably all your test edits have happened in the past couple minutes, let’s create a view of the history table that shows the state of the table 10 minutes ago, <strong>before you started editing</strong> (so, the original data).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- State of history 10 minutes ago</span>
+<span class="c1">-- Records must have been created at least 10 minute ago and</span>
+<span class="c1">-- either be visible now (deleted is null) or deleted in the last hour</span>
+
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">VIEW</span> <span class="n">nyc_streets_ten_min_ago</span> <span class="k">AS</span>
+  <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">nyc_streets_history</span>
+    <span class="k">WHERE</span> <span class="n">created</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="s1">&#39;10min&#39;</span><span class="p">::</span><span class="nb">interval</span><span class="p">)</span>
+    <span class="k">AND</span> <span class="p">(</span> <span class="n">deleted</span> <span class="k">IS</span> <span class="k">NULL</span> <span class="k">OR</span> <span class="n">deleted</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="s1">&#39;10min&#39;</span><span class="p">::</span><span class="nb">interval</span><span class="p">)</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p>We can also create views that show just what a particular user has added, for example:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">VIEW</span> <span class="n">nyc_streets_postgres</span> <span class="k">AS</span>
+  <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">nyc_streets_history</span>
+    <span class="k">WHERE</span> <span class="n">created_by</span> <span class="o">=</span> <span class="s1">&#39;postgres&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://qgis.org">QGIS open source GIS</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/plpgsql-trigger.html">PostgreSQL Triggers</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

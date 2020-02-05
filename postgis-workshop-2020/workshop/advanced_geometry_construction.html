@@ -1,0 +1,393 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Advanced Geometry Constructions &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="advanced-geometry-constructions">
+<span id="advanced-geometry-construction"></span><h1>Advanced Geometry Constructions<a class="headerlink" href="#advanced-geometry-constructions" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">nyc_subway_stations</span></code> layer has provided us with lots of interesting examples so far, but there is something striking about it:</p>
+<img alt="_images/adv_geom0.png" src="_images/adv_geom0.png" />
+<p>Although it is a database of all the stations, it doesn’t allow easy visualization of routes! In this chapter we will use advanced features of PostgreSQL and PostGIS to build up a new linear routes layer from the point layer of subway stations.</p>
+<p>Our task is made especially difficult by two issues:</p>
+<ul class="simple">
+<li>The <code class="docutils literal notranslate"><span class="pre">routes</span></code> column of <code class="docutils literal notranslate"><span class="pre">nyc_subway_stations</span></code> has multiple route identifiers in each row, so a station that might appear in multiple routes appears only once in the table.</li>
+<li>Related to the previous issue, there is no route ordering information in the stations table, so while it is possible to find all the stations in a particular route, it’s not possible using the attributes to determine what the order in which trains travel through the stations.</li>
+</ul>
+<p>The second problem is the harder one: given an unordered set of points in a route, how do we order them to match the actual route.</p>
+<p>Here are the stops for the ‘Q’ train:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span>
+<span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span>
+<span class="k">WHERE</span> <span class="p">(</span><span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In this picture, the stops are labelled with their unique <code class="docutils literal notranslate"><span class="pre">id</span></code> primary key.</p>
+<a class="reference internal image-reference" href="_images/adv_geom1_st.png"><img alt="_images/adv_geom1_st.png" src="_images/adv_geom1_st.png" style="height: 700px;" /></a>
+<p>To do this in QGIS, import the <code class="docutils literal notranslate"><span class="pre">nyc_subway_stations</span></code> through the PostGIS connection and select <strong>Update SQL Layer…</strong>. This will allow you to filter by the above query and get the results shown in the picture.</p>
+<img alt="_images/qgissql_01.png" src="_images/qgissql_01.png" />
+<p>There, click <strong>Execute</strong> and <strong>Update</strong>.</p>
+<img alt="_images/qgissql_02.png" src="_images/qgissql_02.png" />
+<p>If we start at one of the end stations, the next station on the line seems to always be the closest. We can repeat the process each time as long as we exclude all the previously found stations from our search.</p>
+<p>There are two ways to run such an iterative routine in a database:</p>
+<ul class="simple">
+<li>Using a procedural language, like <a class="reference external" href="http://www.postgresql.org/docs/current/static/plpgsql.html">PL/PgSQL</a>.</li>
+<li>Using recursive <a class="reference external" href="http://www.postgresql.org/docs/current/static/queries-with.html">common table expressions</a>.</li>
+</ul>
+<p>Common table expressions (CTE) have the virtue of not requiring a function definition to run. Here’s the CTE to calculate the route line of the ‘Q’ train, starting from the northernmost stop (where <code class="docutils literal notranslate"><span class="pre">id</span></code> is 365).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="k">RECURSIVE</span> <span class="n">next_stop</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">idlist</span><span class="p">)</span> <span class="k">AS</span> <span class="p">(</span>
+    <span class="p">(</span><span class="k">SELECT</span>
+      <span class="n">geom</span><span class="p">,</span>
+      <span class="nb">ARRAY</span><span class="p">[</span><span class="n">id</span><span class="p">]</span> <span class="k">AS</span> <span class="n">idlist</span>
+    <span class="k">FROM</span> <span class="n">nyc_subway_stations</span>
+    <span class="k">WHERE</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">365</span><span class="p">)</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="p">(</span><span class="k">SELECT</span>
+      <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span>
+      <span class="n">array_append</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">idlist</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">idlist</span>
+    <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span><span class="p">,</span> <span class="n">next_stop</span> <span class="n">n</span>
+    <span class="k">WHERE</span> <span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="k">AND</span> <span class="k">NOT</span> <span class="n">n</span><span class="p">.</span><span class="n">idlist</span> <span class="o">@&gt;</span> <span class="nb">ARRAY</span><span class="p">[</span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">]</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">ST_Distance</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span> <span class="k">ASC</span>
+    <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="n">geom</span><span class="p">,</span> <span class="n">idlist</span> <span class="k">FROM</span> <span class="n">next_stop</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The CTE consists of two halves, unioned together:</p>
+<ul class="simple">
+<li>The first half establishes a start point for the expression. We get the initial geometry and initialize the array of visited identifiers, using the record of “id” 365 (the end of the line).</li>
+<li>The second half iterates until it finds no further records. At each iteration it takes in the value at the previous iteration via the self-reference to “next_stop”. We search every stop on the Q line (<strong>strpos(s.routes,’Q’)</strong>) that we have not already added to our visited list (<strong>NOT n.idlist &#64;&gt; ARRAY[s.gid]</strong>) and order them by their distance from the previous point, taking just the first one (the nearest).</li>
+</ul>
+<p>Beyond the recursive CTE itself, there are a number of advanced PostgreSQL array features being used here:</p>
+<ul class="simple">
+<li>We are using ARRAY! PostgreSQL supports arrays of any type. In this case we have an array of integers, but we could also build an array of geometries, or any other PostgreSQL type.</li>
+<li>We are using <strong>array_append</strong> to build up our array of visited identifiers.</li>
+<li>We are using the <strong>&#64;&gt;</strong> array operator (“array contains”) to find which of the Q train stations we have already visited. The <strong>&#64;&gt;</strong> operators requires ARRAY values on both sides, so we have to turn the individual “id” numbers into single-entry arrays using the ARRAY[] syntax.</li>
+</ul>
+<p>When you run the query, you get each geometry in the order it is found (which is the route order), as well as the list of identifiers already visited. Wrapping the geometries into the PostGIS <a class="reference external" href="http://postgis.net/docs/ST_MakeLine.html">ST_MakeLine</a> aggregate function turns the set of geometries into a single linear output, constructed in the provided order.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="k">RECURSIVE</span> <span class="n">next_stop</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">idlist</span><span class="p">)</span> <span class="k">AS</span> <span class="p">(</span>
+    <span class="p">(</span><span class="k">SELECT</span>
+      <span class="n">geom</span><span class="p">,</span>
+      <span class="nb">ARRAY</span><span class="p">[</span><span class="n">id</span><span class="p">]</span> <span class="k">AS</span> <span class="n">idlist</span>
+    <span class="k">FROM</span> <span class="n">nyc_subway_stations</span>
+    <span class="k">WHERE</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">365</span><span class="p">)</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="p">(</span><span class="k">SELECT</span>
+      <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span>
+      <span class="n">array_append</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">idlist</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">)</span> <span class="k">AS</span> <span class="n">idlist</span>
+    <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span><span class="p">,</span> <span class="n">next_stop</span> <span class="n">n</span>
+    <span class="k">WHERE</span> <span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="k">AND</span> <span class="k">NOT</span> <span class="n">n</span><span class="p">.</span><span class="n">idlist</span> <span class="o">@&gt;</span> <span class="nb">ARRAY</span><span class="p">[</span><span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">]</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">ST_Distance</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span> <span class="k">ASC</span>
+    <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="n">ST_MakeLine</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span> <span class="k">AS</span> <span class="n">geom</span> <span class="k">FROM</span> <span class="n">next_stop</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Which looks like this:</p>
+<a class="reference internal image-reference" href="_images/adv_geom3_st.png"><img alt="_images/adv_geom3_st.png" src="_images/adv_geom3_st.png" style="height: 700px;" /></a>
+<p><em>Success!</em></p>
+<p>Except, two problems:</p>
+<ul class="simple">
+<li>We are only calculating one subway route here, we want to calculate all the routes.</li>
+<li>Our query includes a piece of <em>a priori</em> knowledge, the initial station identifier that serves as the seed for the search algorithm that builds the route.</li>
+</ul>
+<p>Let’s tackle the hard problem first, figuring out the first station on a route without manually eyeballing the set of stations that make up the route.</p>
+<p>Our ‘Q’ train stops can serve as a starting point. What characterizes the end stations of the route?</p>
+<a class="reference internal image-reference" href="_images/adv_geom01_st.png"><img alt="_images/adv_geom01_st.png" src="_images/adv_geom01_st.png" style="height: 700px;" /></a>
+<p>One answer is “they are the most northerly and southerly stations”. However, imagine if the ‘Q’ train ran from east to west. Would the condition still hold?</p>
+<p>A less directional characterization of the end stations is “they are the furthest stations from the middle of the route”. With this characterization it doesn’t matter if the route runs north/south or east/west, just that it run in more-or-less one direction, particularly at the ends.</p>
+<p>Since there is no 100% heuristic to figure out the end points, let’s try this second rule out.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">An obvious failure mode of the “furthest from middle” rule is a circular line, like the Circle Line in London, UK. Fortunately, New York doesn’t have any such lines!</p>
+</div>
+<p>To work out the end stations of every route, we first have to work out what routes there are! We find the distinct routes.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">routes</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">string_to_array</span><span class="p">(</span><span class="n">routes</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">routes</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Note the use of two advanced PostgreSQL ARRAY functions:</p>
+<ul class="simple">
+<li><strong>string_to_array</strong> takes in a string and splits it into an array using a separator character. <a class="reference external" href="http://www.postgresql.org/docs/current/static/arrays.html">PostgreSQL supports arrays</a> of any type, so it’s possible to build arrays of strings, as in this case, but also of geometries and geographies as we’ll see later in this example.</li>
+<li><strong>unnest</strong> takes in an array and builds a new row for each entry in the array. The effect is to take a “horizontal” array embedded in a single row and turn it into a “vertical” array with a row for each value.</li>
+</ul>
+<p>The result is a list of all the unique subway route identifiers.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">route</span>
+<span class="o">-------</span>
+ <span class="mi">1</span>
+ <span class="mi">2</span>
+ <span class="mi">3</span>
+ <span class="mi">4</span>
+ <span class="mi">5</span>
+ <span class="mi">6</span>
+ <span class="mi">7</span>
+ <span class="n">A</span>
+ <span class="n">B</span>
+ <span class="n">C</span>
+ <span class="n">D</span>
+ <span class="n">E</span>
+ <span class="n">F</span>
+ <span class="n">G</span>
+ <span class="n">J</span>
+ <span class="n">L</span>
+ <span class="n">M</span>
+ <span class="n">N</span>
+ <span class="n">Q</span>
+ <span class="n">R</span>
+ <span class="n">S</span>
+ <span class="n">V</span>
+ <span class="n">W</span>
+ <span class="n">Z</span>
+<span class="p">(</span><span class="mi">24</span> <span class="n">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can build on this result by joining it back to the <code class="docutils literal notranslate"><span class="pre">nyc_subway_stations</span></code> table to create a new table that has, for each route, a row for every station on that route.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">routes</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">string_to_array</span><span class="p">(</span><span class="n">routes</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="n">stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">routes</span> <span class="n">r</span>
+  <span class="k">JOIN</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">stops</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="nb">id</span>  <span class="o">|</span>                        <span class="n">geom</span>                        <span class="o">|</span> <span class="n">route</span>
+<span class="o">-----+----------------------------------------------------+-------</span>
+   <span class="mi">2</span> <span class="o">|</span> <span class="mi">010100002026690000</span><span class="n">CBE327F938CD21415EDBE1572D315141</span> <span class="o">|</span> <span class="mi">1</span>
+   <span class="mi">1</span> <span class="o">|</span> <span class="mi">010100002026690000</span><span class="n">C676635D10CD2141A0ECDB6975305141</span> <span class="o">|</span> <span class="mi">1</span>
+  <span class="mi">36</span> <span class="o">|</span> <span class="mi">010100002026690000</span><span class="n">AE59A3F82C132241D835BA14D1435141</span> <span class="o">|</span> <span class="mi">1</span>
+  <span class="mi">37</span> <span class="o">|</span> <span class="mi">0101000020266900003495</span><span class="n">A303D615224116DA56527D445141</span> <span class="o">|</span> <span class="mi">1</span>
+
+                            <span class="o">...</span><span class="n">etc</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>Now we can find the center point by collecting all the stations for each route into a single multi-point, and calculating the centroid of that multi-point.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">routes</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">string_to_array</span><span class="p">(</span><span class="n">routes</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="n">stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">routes</span> <span class="n">r</span>
+  <span class="k">JOIN</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">),</span>
+<span class="n">centers</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">ST_Centroid</span><span class="p">(</span><span class="n">ST_Collect</span><span class="p">(</span><span class="n">geom</span><span class="p">))</span> <span class="k">AS</span> <span class="n">geom</span><span class="p">,</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">stops</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">centers</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The center point of the collection of ‘Q’ train stops looks like this:</p>
+<a class="reference internal image-reference" href="_images/adv_geom04_st.png"><img alt="_images/adv_geom04_st.png" src="_images/adv_geom04_st.png" style="height: 700px;" /></a>
+<p>So the northern most stop, the end point, appears to also be the stop furthest from the center. Let’s calculate the furthest point for every route.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">routes</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">string_to_array</span><span class="p">(</span><span class="n">routes</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="n">stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">routes</span> <span class="n">r</span>
+  <span class="k">JOIN</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">),</span>
+<span class="n">centers</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">ST_Centroid</span><span class="p">(</span><span class="n">ST_Collect</span><span class="p">(</span><span class="n">geom</span><span class="p">))</span> <span class="k">AS</span> <span class="n">geom</span><span class="p">,</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">stops</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="n">stops_distance</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">ST_Distance</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="k">c</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span> <span class="k">AS</span> <span class="n">distance</span>
+  <span class="k">FROM</span> <span class="n">stops</span> <span class="n">s</span> <span class="k">JOIN</span> <span class="n">centers</span> <span class="k">c</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">route</span> <span class="o">=</span> <span class="k">c</span><span class="p">.</span><span class="n">route</span><span class="p">)</span>
+  <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span><span class="p">,</span> <span class="n">distance</span> <span class="k">DESC</span>
+<span class="p">),</span>
+<span class="n">first_stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">ON</span> <span class="p">(</span><span class="n">route</span><span class="p">)</span> <span class="n">stops_distance</span><span class="p">.</span><span class="o">*</span>
+  <span class="k">FROM</span> <span class="n">stops_distance</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">first_stops</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>We’ve added two sub-queries this time:</p>
+<ul class="simple">
+<li><strong>stops_distance</strong> joins the centers points back to the stations table and calculates the distance between the stations and center for each route. The result is ordered such that the records come out in batches for each route, with the furthest station as the first record of the batch.</li>
+<li><strong>first_stops</strong> filters the <strong>stops_distance</strong> output by only taking the first record for each distinct group. Because of the way we ordered <strong>stops_distance</strong> the first record is the furthest record, which means it’s the station we want to use as our starting seed to build each subway route.</li>
+</ul>
+<p>Now we know every route, and we know (approximately) what station each route starts from: we’re ready to generate the route lines!</p>
+<p>But first, we need to turn our recursive CTE expression into a function we can call with parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>CREATE OR REPLACE function walk_subway(integer, text) returns geometry AS
+$$
+WITH RECURSIVE next_stop(geom, idlist) AS (
+    (SELECT
+      geom AS geom,
+      ARRAY[id] AS idlist
+    FROM nyc_subway_stations
+    WHERE id = $1)
+    UNION ALL
+    (SELECT
+      s.geom AS geom,
+      array_append(n.idlist, s.id) AS idlist
+    FROM nyc_subway_stations s, next_stop n
+    WHERE strpos(s.routes, $2) != 0
+    AND NOT n.idlist @&gt; ARRAY[s.id]
+    ORDER BY ST_Distance(n.geom, s.geom) ASC
+    LIMIT 1)
+)
+SELECT ST_MakeLine(geom) AS geom
+FROM next_stop;
+$$
+language &#39;sql&#39;;
+</pre></div>
+</div>
+<p>And now we are ready to go!</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">nyc_subway_lines</span> <span class="k">AS</span>
+<span class="c1">-- Distinct route identifiers!</span>
+<span class="k">WITH</span> <span class="n">routes</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">string_to_array</span><span class="p">(</span><span class="n">routes</span><span class="p">,</span><span class="s1">&#39;,&#39;</span><span class="p">))</span> <span class="k">AS</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">nyc_subway_stations</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="c1">-- Joined back to stops! Every route has all its stops!</span>
+<span class="n">stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">routes</span> <span class="n">r</span>
+  <span class="k">JOIN</span> <span class="n">nyc_subway_stations</span> <span class="n">s</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">strpos</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">routes</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">route</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">),</span>
+<span class="c1">-- Collects stops by routes and calculate centroid!</span>
+<span class="n">centers</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">ST_Centroid</span><span class="p">(</span><span class="n">ST_Collect</span><span class="p">(</span><span class="n">geom</span><span class="p">))</span> <span class="k">AS</span> <span class="n">geom</span><span class="p">,</span> <span class="n">route</span>
+  <span class="k">FROM</span> <span class="n">stops</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">route</span>
+<span class="p">),</span>
+<span class="c1">-- Calculate stop/center distance for each stop in each route.</span>
+<span class="n">stops_distance</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">s</span><span class="p">.</span><span class="o">*</span><span class="p">,</span> <span class="n">ST_Distance</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="k">c</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span> <span class="k">AS</span> <span class="n">distance</span>
+  <span class="k">FROM</span> <span class="n">stops</span> <span class="n">s</span> <span class="k">JOIN</span> <span class="n">centers</span> <span class="k">c</span>
+  <span class="k">ON</span> <span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">route</span> <span class="o">=</span> <span class="k">c</span><span class="p">.</span><span class="n">route</span><span class="p">)</span>
+  <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">route</span><span class="p">,</span> <span class="n">distance</span> <span class="k">DESC</span>
+<span class="p">),</span>
+<span class="c1">-- Filter out just the furthest stop/center pairs.</span>
+<span class="n">first_stops</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="k">ON</span> <span class="p">(</span><span class="n">route</span><span class="p">)</span> <span class="n">stops_distance</span><span class="p">.</span><span class="o">*</span>
+  <span class="k">FROM</span> <span class="n">stops_distance</span>
+<span class="p">)</span>
+<span class="c1">-- Pass the route/stop information into the linear route generation function!</span>
+<span class="k">SELECT</span>
+  <span class="n">ascii</span><span class="p">(</span><span class="n">route</span><span class="p">)</span> <span class="k">AS</span> <span class="n">id</span><span class="p">,</span> <span class="c1">-- QGIS likes numeric primary keys</span>
+  <span class="n">route</span><span class="p">,</span>
+  <span class="n">walk_subway</span><span class="p">(</span><span class="n">id</span><span class="p">::</span><span class="nb">Integer</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span> <span class="k">AS</span> <span class="n">geom</span>
+<span class="k">FROM</span> <span class="n">first_stops</span><span class="p">;</span>
+
+<span class="c1">-- Do some housekeeping too</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">nyc_subway_lines</span> <span class="k">ADD</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">id</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Here’s what our final table looks like visualized in QGIS:</p>
+<img alt="_images/adv_geom6_st.png" src="_images/adv_geom6_st.png" />
+<p>As usual, there are some problems with our simple understanding of the data:</p>
+<ul class="simple">
+<li>there are actually two ‘S’ (short distance “shuttle”) trains, one in Manhattan and one in the Rockaways, and we join them together because they are both called ‘S’;</li>
+<li>the ‘4’ train (and a few others) splits at the end of one line into two terminuses, so the “follow one line” assumption breaks and the result has a funny hook on the end.</li>
+</ul>
+<p>Hopefully this example has provided a taste of some of the complex data manipulations that are possible combining the advanced features of PostgreSQL and PostGIS.</p>
+<div class="section" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/arrays.html">PostgreSQL Arrays</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/functions-array.html">PostgreSQL Array Functions</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/queries-with.html">PostgreSQL Recursive Common TABLE Expressions</a></li>
+<li><a class="reference external" href="http://postgis.net/docs/ST_MakeLine.html">PostGIS ST_MakeLine</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

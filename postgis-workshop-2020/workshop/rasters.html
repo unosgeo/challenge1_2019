@@ -1,0 +1,812 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Working with Rasters &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="working-with-rasters">
+<span id="rasters"></span><h1>Working with Rasters<a class="headerlink" href="#working-with-rasters" title="Permalink to this headline">¶</a></h1>
+<p>In this section you will learn to load a raster, get basic information on the raster, process and analyze it.</p>
+<p>Before going further, we should describe what a raster is and what a raster is used for. At the simplest level, a raster is a photo or image with information describing where to place the raster on the Earth’s surface. A photograph typically has three sets of values, one set for each primary color (red, green, and blue). A raster also has sets of values, often more than those found in a photograph. Each set of values is known as a band. So, a photograph typically has three bands while a raster has at least one band. As with digital photographs, rasters come in a variety of file formats. Common raster formats you may come across include PNG, JPEG, GeoTIFF, HDF5, and NetCDF. Since rasters can have many bands and even more values, they can be used to store large quantities of data in an efficient manner. Due to their efficiency, rasters are used for satellite and aerial sensors and modeled surfaces, such as weather forecasts.</p>
+<p>Some definitions to consider:</p>
+<ul class="simple">
+<li>Raster is the PostGIS data type for storing the raster files in PostgreSQL.</li>
+<li>Tile: This is a small chunk of the original raster file to be stored in one column of a table’s row. Each tile has its own set of spatial information and thus is independent of all the other tiles in the same column of the same table, even if the other tiles are from the same original raster file.</li>
+</ul>
+<p>For this section let’s create a new <code class="docutils literal notranslate"><span class="pre">SCHEMA</span></code> where we will keep the objects for working with rasters. On your pgAdmin <em>query editor</em> write:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">SCHEMA</span> <span class="n">rasters</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The data that we will use in this section is world climate data for the period of 1970-2000 by 10 min resolution provided by <a class="reference external" href="http://worldclim.org/version2">worldclim</a> but you can find it in the data folder <strong>raster</strong> of this tutorial, unzip it.</p>
+<ol class="arabic simple">
+<li>First, let’s inspect the <code class="docutils literal notranslate"><span class="pre">wc2.0_10m_tmax_01.tif</span></code> raster file using GDAL, you can install GDAL for unix/MAC using the binaries from <a class="reference external" href="https://sandbox.idre.ucla.edu/sandbox/general/how-to-install-and-run-gdal">this site</a> or using the <a class="reference external" href="https://trac.osgeo.org/osgeo4w/">OSGeoW</a> suite for Windows, which will provide all the packages you need. You can also open the raster with QGIS and inspect its metadata.</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Driver</span><span class="p">:</span> <span class="n">GTiff</span><span class="o">/</span><span class="n">GeoTIFF</span>
+<span class="n">Files</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_01</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">Size</span> <span class="ow">is</span> <span class="mi">2160</span><span class="p">,</span> <span class="mi">1080</span>
+<span class="n">Coordinate</span> <span class="n">System</span> <span class="ow">is</span><span class="p">:</span>
+<span class="n">GEOGCS</span><span class="p">[</span><span class="s2">&quot;WGS 84&quot;</span><span class="p">,</span>
+    <span class="n">DATUM</span><span class="p">[</span><span class="s2">&quot;WGS_1984&quot;</span><span class="p">,</span>
+        <span class="n">SPHEROID</span><span class="p">[</span><span class="s2">&quot;WGS 84&quot;</span><span class="p">,</span><span class="mi">6378137</span><span class="p">,</span><span class="mf">298.257223563</span><span class="p">,</span>
+            <span class="n">AUTHORITY</span><span class="p">[</span><span class="s2">&quot;EPSG&quot;</span><span class="p">,</span><span class="s2">&quot;7030&quot;</span><span class="p">]],</span>
+        <span class="n">AUTHORITY</span><span class="p">[</span><span class="s2">&quot;EPSG&quot;</span><span class="p">,</span><span class="s2">&quot;6326&quot;</span><span class="p">]],</span>
+    <span class="n">PRIMEM</span><span class="p">[</span><span class="s2">&quot;Greenwich&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">UNIT</span><span class="p">[</span><span class="s2">&quot;degree&quot;</span><span class="p">,</span><span class="mf">0.0174532925199433</span><span class="p">],</span>
+    <span class="n">AUTHORITY</span><span class="p">[</span><span class="s2">&quot;EPSG&quot;</span><span class="p">,</span><span class="s2">&quot;4326&quot;</span><span class="p">]]</span>
+<span class="n">Origin</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">180.000000000000000</span><span class="p">,</span><span class="mf">90.000000000000000</span><span class="p">)</span>
+<span class="n">Pixel</span> <span class="n">Size</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.166666666666667</span><span class="p">,</span><span class="o">-</span><span class="mf">0.166666666666667</span><span class="p">)</span>
+<span class="n">Metadata</span><span class="p">:</span>
+  <span class="n">AREA_OR_POINT</span><span class="o">=</span><span class="n">Area</span>
+<span class="n">Image</span> <span class="n">Structure</span> <span class="n">Metadata</span><span class="p">:</span>
+  <span class="n">COMPRESSION</span><span class="o">=</span><span class="n">DEFLATE</span>
+  <span class="n">INTERLEAVE</span><span class="o">=</span><span class="n">BAND</span>
+<span class="n">Corner</span> <span class="n">Coordinates</span><span class="p">:</span>
+<span class="n">Upper</span> <span class="n">Left</span>  <span class="p">(</span><span class="o">-</span><span class="mf">180.0000000</span><span class="p">,</span>  <span class="mf">90.0000000</span><span class="p">)</span> <span class="p">(</span><span class="mi">180</span><span class="n">d</span> <span class="mi">0</span><span class="s1">&#39; 0.00&quot;W, 90d 0&#39;</span> <span class="mf">0.00</span><span class="s2">&quot;N)</span>
+<span class="n">Lower</span> <span class="n">Left</span>  <span class="p">(</span><span class="o">-</span><span class="mf">180.0000000</span><span class="p">,</span> <span class="o">-</span><span class="mf">90.0000000</span><span class="p">)</span> <span class="p">(</span><span class="mi">180</span><span class="n">d</span> <span class="mi">0</span><span class="s1">&#39; 0.00&quot;W, 90d 0&#39;</span> <span class="mf">0.00</span><span class="s2">&quot;S)</span>
+<span class="n">Upper</span> <span class="n">Right</span> <span class="p">(</span> <span class="mf">180.0000000</span><span class="p">,</span>  <span class="mf">90.0000000</span><span class="p">)</span> <span class="p">(</span><span class="mi">180</span><span class="n">d</span> <span class="mi">0</span><span class="s1">&#39; 0.00&quot;E, 90d 0&#39;</span> <span class="mf">0.00</span><span class="s2">&quot;N)</span>
+<span class="n">Lower</span> <span class="n">Right</span> <span class="p">(</span> <span class="mf">180.0000000</span><span class="p">,</span> <span class="o">-</span><span class="mf">90.0000000</span><span class="p">)</span> <span class="p">(</span><span class="mi">180</span><span class="n">d</span> <span class="mi">0</span><span class="s1">&#39; 0.00&quot;E, 90d 0&#39;</span> <span class="mf">0.00</span><span class="s2">&quot;S)</span>
+<span class="n">Center</span>      <span class="p">(</span>   <span class="mf">0.0000000</span><span class="p">,</span>   <span class="mf">0.0000000</span><span class="p">)</span> <span class="p">(</span>  <span class="mi">0</span><span class="n">d</span> <span class="mi">0</span><span class="s1">&#39; 0.01&quot;E,  0d 0&#39;</span> <span class="mf">0.01</span><span class="s2">&quot;N)</span>
+<span class="n">Band</span> <span class="mi">1</span> <span class="n">Block</span><span class="o">=</span><span class="mi">2160</span><span class="n">x1</span> <span class="n">Type</span><span class="o">=</span><span class="n">Float32</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">=</span><span class="n">Gray</span>
+  <span class="n">Min</span><span class="o">=-</span><span class="mf">39.708</span> <span class="n">Max</span><span class="o">=</span><span class="mf">42.235</span>
+  <span class="n">Minimum</span><span class="o">=-</span><span class="mf">39.708</span><span class="p">,</span> <span class="n">Maximum</span><span class="o">=</span><span class="mf">42.235</span><span class="p">,</span> <span class="n">Mean</span><span class="o">=</span><span class="mf">1.000</span><span class="p">,</span> <span class="n">StdDev</span><span class="o">=</span><span class="mf">1.000</span>
+  <span class="n">NoData</span> <span class="n">Value</span><span class="o">=-</span><span class="mf">3.39999999999999996e+38</span>
+  <span class="n">Metadata</span><span class="p">:</span>
+    <span class="n">STATISTICS_MAXIMUM</span><span class="o">=</span><span class="mf">42.234750080109</span>
+    <span class="n">STATISTICS_MEAN</span><span class="o">=</span><span class="mf">1.</span><span class="c1">#SNAN</span>
+    <span class="n">STATISTICS_MINIMUM</span><span class="o">=-</span><span class="mf">39.707750263214</span>
+    <span class="n">STATISTICS_STDDEV</span><span class="o">=</span><span class="mf">1.</span><span class="c1">#SNAN</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li>From this information we know the coodinate reference system of the raster, the limits, pixel size, and some statistics on the values it contains.</li>
+<li>For the next steps make sure you have postgreSQL binaries added to your path if not already added, for Mac this is done by:</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;/Applications/Postgres.app/Contents/Versions/11/bin:$PATH&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li>Now we’re ready to load the rasters of maximum temperature into our database using <code class="docutils literal notranslate"><span class="pre">raster2pgsql</span></code>.</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raster2pgsql</span> <span class="o">-</span><span class="n">s</span> <span class="mi">4326</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span><span class="n">x100</span> <span class="o">-</span><span class="n">F</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">C</span> <span class="o">-</span><span class="n">Y</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_</span><span class="o">*.</span><span class="n">tif</span> <span class="n">rasters</span><span class="o">.</span><span class="n">worldclim_tmax</span> <span class="o">|</span> <span class="n">psql</span> <span class="o">-</span><span class="n">d</span> <span class="n">nyc</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li>Now let’s load the rasters of minimum temperature into our database using <code class="docutils literal notranslate"><span class="pre">raster2pgsql</span></code>.</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raster2pgsql</span> <span class="o">-</span><span class="n">s</span> <span class="mi">4326</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span><span class="n">x100</span> <span class="o">-</span><span class="n">F</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">C</span> <span class="o">-</span><span class="n">Y</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmin_</span><span class="o">*.</span><span class="n">tif</span> <span class="n">rasters</span><span class="o">.</span><span class="n">worldclim_tmin</span> <span class="o">|</span> <span class="n">psql</span> <span class="o">-</span><span class="n">d</span> <span class="n">nyc</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The raster2pgsql command is called with the following flags:
+-s: This flag assigns SRID 4326 to the imported rasters.
+-t: This flag denotes the tile size. It chunks the imported rasters into smaller and more manageable pieces; each record added to the table will be at most 100 x 100 pixels.
+-F: This flag adds a column to the table and fills it with the raster’s filename.
+-I: This flag creates a GIST spatial index on the table’s raster column.
+-C: This flag applies the standard set of constraints on the table. The standard set of constraints includes checks for dimension, scale, skew, upper-left coordinate, and SRID.
+-Y: This flag instructs raster2pgsql to use COPY statements instead of INSERT statements. COPY is typically faster than INSERT.</p>
+</div>
+<ol class="arabic simple" start="6">
+<li>After running ths you’ll have added the rasters to the rasters SCHEMA. The terminal output will be:</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Processing</span> <span class="mi">1</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_01</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">BEGIN</span>
+<span class="n">CREATE</span> <span class="n">TABLE</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">2</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_02</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">3</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_03</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">4</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_04</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">5</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_05</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">6</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_06</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">7</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_07</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">8</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_08</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">9</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_09</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">10</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_10</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">11</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_11</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">Processing</span> <span class="mi">12</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="n">wc2</span><span class="o">.</span><span class="mi">0_10</span><span class="n">m_tmax_12</span><span class="o">.</span><span class="n">tif</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">COPY</span> <span class="mi">11</span>
+<span class="n">CREATE</span> <span class="n">INDEX</span>
+<span class="n">ANALYZE</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">SRID</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">scale</span><span class="o">-</span><span class="n">X</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">scale</span><span class="o">-</span><span class="n">Y</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">blocksize</span><span class="o">-</span><span class="n">X</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">blocksize</span><span class="o">-</span><span class="n">Y</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">alignment</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">number</span> <span class="n">of</span> <span class="n">bands</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">pixel</span> <span class="nb">type</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">nodata</span> <span class="n">value</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">out</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">database</span> <span class="n">constraint</span>
+<span class="n">NOTICE</span><span class="p">:</span>  <span class="n">Adding</span> <span class="n">maximum</span> <span class="n">extent</span> <span class="n">constraint</span>
+ <span class="n">addrasterconstraints</span>
+<span class="o">----------------------</span>
+ <span class="n">t</span>
+<span class="p">(</span><span class="mi">1</span> <span class="n">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A similar output will be generated for the minimum temperature rasters.</p>
+</div>
+<ol class="arabic simple" start="7">
+<li>You can now verify this on pgAdmin, the rasters have been loaded in the <code class="docutils literal notranslate"><span class="pre">worldclim</span></code> table under the rasters SCHEMA:</li>
+</ol>
+<img alt="_images/rasters_01.png" class="inline" src="_images/rasters_01.png" />
+<ol class="arabic simple" start="8">
+<li>Now let’s import two SRTM layers for New York taken from <a class="reference external" href="https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/">https://dds.cr.usgs.gov/srtm/version2_1/SRTM1/Region_06/</a> but that is included in the data bundle. New york is splitted into two SRTM raster images <code class="docutils literal notranslate"><span class="pre">N40W074.hgt</span></code> and <code class="docutils literal notranslate"><span class="pre">N40W075.hgt</span></code>.</li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raster2pgsql</span> <span class="o">-</span><span class="n">s</span> <span class="mi">4326</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span><span class="n">x100</span> <span class="o">-</span><span class="n">F</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">C</span> <span class="o">-</span><span class="n">Y</span> <span class="n">N40W074</span><span class="o">.</span><span class="n">hgt</span> <span class="n">rasters</span><span class="o">.</span><span class="n">srtm1</span>  <span class="o">|</span> <span class="n">psql</span> <span class="o">-</span><span class="n">d</span> <span class="n">nyc</span>
+<span class="n">raster2pgsql</span> <span class="o">-</span><span class="n">s</span> <span class="mi">4326</span> <span class="o">-</span><span class="n">t</span> <span class="mi">100</span><span class="n">x100</span> <span class="o">-</span><span class="n">F</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">C</span> <span class="o">-</span><span class="n">Y</span> <span class="n">N40W075</span><span class="o">.</span><span class="n">hgt</span> <span class="n">rasters</span><span class="o">.</span><span class="n">srtm2</span>  <span class="o">|</span> <span class="n">psql</span> <span class="o">-</span><span class="n">d</span> <span class="n">nyc</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="8">
+<li>Verify that this is also reflected in pgAdmin:</li>
+</ol>
+<img alt="_images/rasters_02.png" class="inline" src="_images/rasters_02.png" />
+<ol class="arabic simple" start="9">
+<li>Now let’s obtain some information on the rasters within the database, for this, run the following SQL command:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>
+      <span class="n">r_table_name</span><span class="p">,</span>
+      <span class="n">r_raster_column</span><span class="p">,</span>
+      <span class="n">srid</span><span class="p">,</span>
+      <span class="n">scale_x</span><span class="p">,</span>
+      <span class="n">scale_y</span><span class="p">,</span>
+      <span class="n">blocksize_x</span><span class="p">,</span>
+      <span class="n">blocksize_y</span><span class="p">,</span>
+      <span class="n">same_alignment</span><span class="p">,</span>
+      <span class="n">regular_blocking</span><span class="p">,</span>
+      <span class="n">num_bands</span><span class="p">,</span>
+      <span class="n">pixel_types</span><span class="p">,</span>
+      <span class="n">nodata_values</span><span class="p">,</span>
+      <span class="n">out_db</span><span class="p">,</span>
+      <span class="n">ST_AsText</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span> <span class="k">AS</span> <span class="n">extent</span>
+ <span class="k">FROM</span> <span class="n">raster_columns</span> <span class="k">WHERE</span> <span class="n">r_table_name</span> <span class="o">=</span> <span class="s1">&#39;worldclim_tmax&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Only some of the results of this query are shown on the below table (because there are too many attributes):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">r_table_name</span>  <span class="o">|</span> <span class="n">r_raster_column</span> <span class="o">|</span> <span class="n">srid</span> <span class="o">|</span>   <span class="n">scale_x</span>    <span class="o">|</span>    <span class="n">scale_y</span>    <span class="o">|</span> <span class="n">blocksize_x</span> <span class="o">|</span> <span class="n">blocksize_y</span>
+<span class="o">----------------+-----------------+------+--------------+---------------+-------------+-------------</span>
+<span class="n">worldclim_tmax</span>  <span class="o">|</span> <span class="n">rast</span>            <span class="o">|</span> <span class="mi">4326</span> <span class="o">|</span> <span class="mf">0.1666666667</span> <span class="o">|</span> <span class="o">-</span><span class="mf">0.1666666667</span> <span class="o">|</span> <span class="mi">100</span>         <span class="o">|</span> <span class="mi">100</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Seeing this, the blocksize specified for <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> while loading the data worked!</p>
+</div>
+<ol class="arabic simple" start="10">
+<li>Now let’s use the <a class="reference external" href="https://postgis.net/docs/RT_ST_MetaData.html">ST_Metadata()</a> to see the metadata for a single raster:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>  <span class="n">rid</span><span class="p">,</span>  <span class="p">(</span><span class="n">ST_Metadata</span><span class="p">(</span><span class="n">rast</span><span class="p">)).</span><span class="o">*</span>
+<span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>
+<span class="k">WHERE</span> <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;wc2.0_10m_tmax_01.tif&#39;</span>
+<span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The output will be for the average maximun temperature of the first month (January).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">rid</span> <span class="o">|</span> <span class="n">upperleftx</span> <span class="o">|</span> <span class="n">upperlefty</span> <span class="o">|</span> <span class="n">width</span> <span class="o">|</span> <span class="n">height</span> <span class="o">|</span>      <span class="n">scalex</span>       <span class="o">|</span>       <span class="n">scaley</span>       <span class="o">|</span> <span class="n">skewx</span> <span class="o">|</span> <span class="n">skewy</span> <span class="o">|</span> <span class="n">srid</span> <span class="o">|</span> <span class="n">numbands</span>
+<span class="o">-----+------------+------------+-------+--------+-------------------+--------------------+-------+-------+------+----------</span>
+   <span class="mi">1</span> <span class="o">|</span>       <span class="o">-</span><span class="mi">180</span> <span class="o">|</span>         <span class="mi">90</span> <span class="o">|</span>   <span class="mi">100</span> <span class="o">|</span>    <span class="mi">100</span> <span class="o">|</span> <span class="mf">0.166666666666667</span> <span class="o">|</span> <span class="o">-</span><span class="mf">0.166666666666667</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span> <span class="mi">4326</span> <span class="o">|</span>        <span class="mi">1</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="11">
+<li>Now with <a class="reference external" href="https://postgis.net/docs/RT_ST_BandMetaData.html">ST_BandMetadata()</a> let’s obtain some metadata on the raster’s tile only band at the record 23.</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>  <span class="n">rid</span><span class="p">,</span>  <span class="p">(</span><span class="n">ST_BandMetadata</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>
+<span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>
+<span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">rid</span> <span class="o">|</span> <span class="n">pixeltype</span> <span class="o">|</span>      <span class="n">nodatavalue</span>      <span class="o">|</span> <span class="n">isoutdb</span> <span class="o">|</span> <span class="n">path</span> <span class="o">|</span> <span class="n">outdbbandnum</span> <span class="o">|</span> <span class="n">filesize</span> <span class="o">|</span> <span class="n">filetimestamp</span>
+<span class="o">-----+-----------+-----------------------+---------+------+--------------+----------+---------------</span>
+  <span class="mi">23</span> <span class="o">|</span> <span class="mi">32</span><span class="n">BF</span>      <span class="o">|</span> <span class="o">-</span><span class="mf">3.39999995214436e+38</span> <span class="o">|</span> <span class="n">f</span>       <span class="o">|</span>      <span class="o">|</span>              <span class="o">|</span>          <span class="o">|</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="12">
+<li>Results for worldclim_tmin:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>  <span class="n">rid</span><span class="p">,</span>  <span class="p">(</span><span class="n">ST_BandMetadata</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>
+<span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmin</span>
+<span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">rid</span> <span class="o">|</span> <span class="n">pixeltype</span> <span class="o">|</span>      <span class="n">nodatavalue</span>      <span class="o">|</span> <span class="n">isoutdb</span> <span class="o">|</span> <span class="n">path</span> <span class="o">|</span> <span class="n">outdbbandnum</span> <span class="o">|</span> <span class="n">filesize</span> <span class="o">|</span> <span class="n">filetimestamp</span>
+<span class="o">-----+-----------+-----------------------+---------+------+--------------+----------+---------------</span>
+  <span class="mi">23</span> <span class="o">|</span> <span class="mi">32</span><span class="n">BF</span>      <span class="o">|</span> <span class="o">-</span><span class="mf">3.39999995214436e+38</span> <span class="o">|</span> <span class="n">f</span>       <span class="o">|</span>      <span class="o">|</span>              <span class="o">|</span>          <span class="o">|</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="13">
+<li>Now let’s use <a class="reference external" href="https://postgis.net/docs/RT_ST_SummaryStats.html">ST_SummaryStats()</a> to compute a summary of statistics comprising: count, sum, mean, stddev, min, max for the given raster band (worldclim_tmax and then wordclim_tmin).</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>    <span class="p">(</span><span class="n">ST_SummaryStats</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>  <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>  <span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>  <span class="k">count</span><span class="p">,</span>  <span class="k">sum</span><span class="p">,</span>  <span class="n">round</span><span class="p">(</span><span class="n">mean</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">mean</span><span class="p">,</span>  <span class="n">round</span><span class="p">(</span><span class="n">stddev</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">stddev</span><span class="p">,</span>  <span class="k">min</span><span class="p">,</span>  <span class="k">max</span>
+<span class="k">FROM</span> <span class="n">stats</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">count</span> <span class="o">|</span>        <span class="nb">sum</span>        <span class="o">|</span>  <span class="n">mean</span>  <span class="o">|</span> <span class="n">stddev</span> <span class="o">|</span>        <span class="nb">min</span>        <span class="o">|</span> <span class="nb">max</span>
+<span class="o">-------+-------------------+--------+--------+-------------------+-----</span>
+  <span class="mi">1818</span> <span class="o">|</span> <span class="o">-</span><span class="mf">26097.0808352232</span> <span class="o">|</span> <span class="o">-</span><span class="mf">14.35</span> <span class="o">|</span>   <span class="mf">4.14</span> <span class="o">|</span> <span class="o">-</span><span class="mf">25.9260864257812</span> <span class="o">|</span>   <span class="mi">0</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="14">
+<li>And for worldclim_tmin (remember to included the SCHEMA before the table - rasters.wordlclim_tmin):</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>    <span class="p">(</span><span class="n">ST_SummaryStats</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>  <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmin</span>  <span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>  <span class="k">count</span><span class="p">,</span>  <span class="k">sum</span><span class="p">,</span>  <span class="n">round</span><span class="p">(</span><span class="n">mean</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">mean</span><span class="p">,</span>  <span class="n">round</span><span class="p">(</span><span class="n">stddev</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">stddev</span><span class="p">,</span>  <span class="k">min</span><span class="p">,</span>  <span class="k">max</span>
+<span class="k">FROM</span> <span class="n">stats</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">count</span> <span class="o">|</span>       <span class="nb">sum</span>        <span class="o">|</span>  <span class="n">mean</span>  <span class="o">|</span> <span class="n">stddev</span> <span class="o">|</span>        <span class="nb">min</span>        <span class="o">|</span> <span class="nb">max</span>
+<span class="o">-------+------------------+--------+--------+-------------------+-----</span>
+  <span class="mi">1818</span> <span class="o">|</span> <span class="o">-</span><span class="mf">39561.697756052</span> <span class="o">|</span> <span class="o">-</span><span class="mf">21.76</span> <span class="o">|</span>   <span class="mf">4.19</span> <span class="o">|</span> <span class="o">-</span><span class="mf">30.7347507476807</span> <span class="o">|</span>   <span class="mi">0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In the summary statistics, the count indicates that the raster tile is about 80 percent NODATA. Remember the rasters we are analyzing show the average monthly min/max from 1970-2000, therefore the values may not match recent years.</p>
+</div>
+<ol class="arabic simple" start="15">
+<li>Now let’s use <a class="reference external" href="https://postgis.net/docs/RT_ST_Histogram.html">ST_Histogram()</a> to see how the values are distributed:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">hist</span> <span class="k">AS</span> <span class="p">(</span>
+     <span class="k">SELECT</span>
+             <span class="p">(</span><span class="n">ST_Histogram</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>
+     <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>
+     <span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+        <span class="n">round</span><span class="p">(</span><span class="k">min</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="k">min</span><span class="p">,</span>
+        <span class="n">round</span><span class="p">(</span><span class="k">max</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="k">max</span><span class="p">,</span>
+        <span class="k">count</span><span class="p">,</span>
+        <span class="n">round</span><span class="p">(</span><span class="n">percent</span><span class="p">::</span><span class="nb">numeric</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">percent</span>
+<span class="k">FROM</span> <span class="n">hist</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">min</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="nb">min</span>   <span class="o">|</span>  <span class="nb">max</span>   <span class="o">|</span> <span class="n">count</span> <span class="o">|</span> <span class="n">percent</span>
+<span class="o">--------+--------+-------+---------</span>
+ <span class="o">-</span><span class="mf">25.93</span> <span class="o">|</span> <span class="o">-</span><span class="mf">23.77</span> <span class="o">|</span>    <span class="mi">25</span> <span class="o">|</span>    <span class="mf">0.01</span>
+ <span class="o">-</span><span class="mf">23.77</span> <span class="o">|</span> <span class="o">-</span><span class="mf">21.61</span> <span class="o">|</span>    <span class="mi">50</span> <span class="o">|</span>    <span class="mf">0.03</span>
+ <span class="o">-</span><span class="mf">21.61</span> <span class="o">|</span> <span class="o">-</span><span class="mf">19.44</span> <span class="o">|</span>   <span class="mi">132</span> <span class="o">|</span>    <span class="mf">0.07</span>
+ <span class="o">-</span><span class="mf">19.44</span> <span class="o">|</span> <span class="o">-</span><span class="mf">17.28</span> <span class="o">|</span>   <span class="mi">214</span> <span class="o">|</span>    <span class="mf">0.12</span>
+ <span class="o">-</span><span class="mf">17.28</span> <span class="o">|</span> <span class="o">-</span><span class="mf">15.12</span> <span class="o">|</span>   <span class="mi">347</span> <span class="o">|</span>    <span class="mf">0.19</span>
+ <span class="o">-</span><span class="mf">15.12</span> <span class="o">|</span> <span class="o">-</span><span class="mf">12.96</span> <span class="o">|</span>   <span class="mi">403</span> <span class="o">|</span>    <span class="mf">0.22</span>
+ <span class="o">-</span><span class="mf">12.96</span> <span class="o">|</span> <span class="o">-</span><span class="mf">10.80</span> <span class="o">|</span>   <span class="mi">247</span> <span class="o">|</span>    <span class="mf">0.14</span>
+ <span class="o">-</span><span class="mf">10.80</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">8.64</span> <span class="o">|</span>   <span class="mi">280</span> <span class="o">|</span>    <span class="mf">0.15</span>
+  <span class="o">-</span><span class="mf">8.64</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">6.48</span> <span class="o">|</span>    <span class="mi">77</span> <span class="o">|</span>    <span class="mf">0.04</span>
+  <span class="o">-</span><span class="mf">6.48</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">4.32</span> <span class="o">|</span>    <span class="mi">29</span> <span class="o">|</span>    <span class="mf">0.02</span>
+  <span class="o">-</span><span class="mf">4.32</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">2.16</span> <span class="o">|</span>     <span class="mi">1</span> <span class="o">|</span>    <span class="mf">0.00</span>
+  <span class="o">-</span><span class="mf">2.16</span> <span class="o">|</span>   <span class="mf">0.00</span> <span class="o">|</span>    <span class="mi">13</span> <span class="o">|</span>    <span class="mf">0.01</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="16">
+<li>Another way to see how the pixel values are distributed is to use <a class="reference external" href="https://postgis.net/docs/RT_ST_Quantile.html">ST_Quantile()</a>.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Looks like 78 percent of all values are at -12.96 or below.</p>
+</div>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>
+     <span class="p">(</span><span class="n">ST_Quantile</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>
+<span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>
+<span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">quantile</span> <span class="o">|</span>       <span class="n">value</span>
+<span class="o">----------+-------------------</span>
+        <span class="mi">0</span> <span class="o">|</span> <span class="o">-</span><span class="mf">25.9260864257812</span>
+     <span class="mf">0.25</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">16.999062538147</span>
+      <span class="mf">0.5</span> <span class="o">|</span>  <span class="o">-</span><span class="mf">14.526111125946</span>
+     <span class="mf">0.75</span> <span class="o">|</span> <span class="o">-</span><span class="mf">11.1928572654724</span>
+        <span class="mi">1</span> <span class="o">|</span>                 <span class="mi">0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This shows againg that 75 percent of the values align with wath previouly seen, that they are below of -16.99.</p>
+</div>
+<ol class="arabic simple" start="17">
+<li>Let’s check the 10 top occurring values in the raster tile with <a class="reference external" href="https://postgis.net/docs/RT_ST_ValueCount.html">ST_ValueCount()</a>. You can do this also for <code class="docutils literal notranslate"><span class="pre">worldclim_tmin</span></code>.</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span>
+  <span class="p">(</span><span class="n">ST_ValueCount</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)).</span><span class="o">*</span>
+<span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span>
+<span class="k">WHERE</span> <span class="n">rid</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">count</span> <span class="k">DESC</span><span class="p">,</span> <span class="n">value</span>
+<span class="k">LIMIT</span> <span class="mi">10</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>       <span class="n">value</span>       <span class="o">|</span> <span class="n">count</span>
+<span class="o">-------------------+-------</span>
+                 <span class="mi">0</span> <span class="o">|</span>     <span class="mi">6</span>
+ <span class="o">-</span><span class="mf">21.2382507324219</span> <span class="o">|</span>     <span class="mi">2</span>
+               <span class="o">-</span><span class="mi">17</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">16.8117504119873</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">16.7112503051758</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">16.7000007629395</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">16.0542507171631</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">14.7344999313354</span> <span class="o">|</span>     <span class="mi">2</span>
+   <span class="o">-</span><span class="mf">14.66100025177</span> <span class="o">|</span>     <span class="mi">2</span>
+ <span class="o">-</span><span class="mf">14.6262502670288</span> <span class="o">|</span>     <span class="mi">2</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="18">
+<li>Since we are to look at rasters in the context of New York, an easy question to ask is: what was the mean max/min temperature for 1970-2000 in New York? Let’s import a shapefile containing just the boundaries of the city <code class="docutils literal notranslate"><span class="pre">borough_boundaries</span></code>, this is contained in the data bundle for this course. To import it let’s leave the EPSG: 4326 to match our rasters and follow the next screenshots to import it with QGIS:</li>
+<li>Selecting the public SCHEMA (since this one is not a raster) using the DB Manager, click on <code class="docutils literal notranslate"><span class="pre">ìmport</span> <span class="pre">layer/File..</span></code></li>
+</ol>
+<img alt="_images/rasters_03.png" class="inline" src="_images/rasters_03.png" />
+<ol class="arabic simple" start="20">
+<li>Select the <a href="#id1"><span class="problematic" id="id2">``</span></a>borough_boundaries``from the rasters data bundle directory.</li>
+</ol>
+<img alt="_images/rasters_04.png" class="inline" src="_images/rasters_04.png" />
+<ol class="arabic simple" start="21">
+<li>Let’s select EPSG:4326 for compatibility with our rasters.</li>
+</ol>
+<img alt="_images/rasters_05.png" class="inline" src="_images/rasters_05.png" />
+<ol class="arabic simple" start="22">
+<li>Now let’s run the following SQL query to see the mean maximum temperature in January for the period of 1970-2000:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="p">(</span>
+     <span class="n">ST_SummaryStats</span><span class="p">(</span>
+             <span class="n">ST_Union</span><span class="p">(</span>
+                     <span class="n">ST_Clip</span><span class="p">(</span><span class="n">tmax</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="k">TRUE</span><span class="p">)</span>
+             <span class="p">),</span>
+             <span class="mi">1</span>
+           <span class="p">)</span>
+   <span class="p">).</span><span class="n">mean</span>
+   <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmax</span> <span class="k">as</span> <span class="n">tmax</span>
+   <span class="k">JOIN</span> <span class="n">borough_boundaries</span> <span class="n">ny</span>
+           <span class="k">ON</span> <span class="n">ST_Intersects</span><span class="p">(</span><span class="n">tmax</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span>
+   <span class="k">WHERE</span> <span class="n">tmax</span><span class="p">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;wc2.0_10m_tmax_01.tif&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>       <span class="n">mean</span>
+<span class="o">------------------</span>
+ <span class="mf">5.22810506820679</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="23">
+<li>We can run the same for the minimum temperature as well for January and you are encouraged to try different months by changing the filename:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="p">(</span>
+     <span class="n">ST_SummaryStats</span><span class="p">(</span>
+             <span class="n">ST_Union</span><span class="p">(</span>
+                     <span class="n">ST_Clip</span><span class="p">(</span><span class="n">tmin</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">4326</span><span class="p">),</span> <span class="k">TRUE</span><span class="p">)</span>
+             <span class="p">),</span>
+             <span class="mi">1</span>
+           <span class="p">)</span>
+   <span class="p">).</span><span class="n">mean</span>
+   <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">worldclim_tmin</span> <span class="k">as</span> <span class="n">tmin</span>
+   <span class="k">JOIN</span> <span class="n">borough_boundaries</span> <span class="n">ny</span>
+           <span class="k">ON</span> <span class="n">ST_Intersects</span><span class="p">(</span><span class="n">tmin</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">4326</span><span class="p">))</span>
+   <span class="k">WHERE</span> <span class="n">tmin</span><span class="p">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;wc2.0_10m_tmin_01.tif&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>       <span class="n">mean</span>
+<span class="o">-------------------</span>
+ <span class="o">-</span><span class="mf">5.88770508766174</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="24">
+<li>Since we are working with two rasters to cover the extent of New York, let’s first create a single raster table to work with:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">rasters</span><span class="p">.</span><span class="n">srtm</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="n">ST_Union</span><span class="p">(</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">as</span> <span class="n">rast</span>
+<span class="k">FROM</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">rast</span> <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">srtm1</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> <span class="n">rast</span> <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">srtm2</span><span class="p">)</span> <span class="n">foo</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="25">
+<li>Since the geometries of the shapefile of New York are also seperate let’s create a unified one for further processsing:</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">singleny</span> <span class="k">AS</span>
+<span class="k">SELECT</span> <span class="n">ST_Union</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">)</span> <span class="k">AS</span> <span class="n">geom</span>
+<span class="k">FROM</span> <span class="n">borough_boundaries</span> <span class="n">ny</span>
+</pre></div>
+</div>
+<p>26. We will use the SRTM rasters, loaded as 100 x 100 tiles, at the begining. With it, we will generate slope and hillshade rasters using New York as our area of interest.
+The two queries below use variants of <a class="reference external" href="https://postgis.net/docs/RT_ST_Slope.html">ST_Slope()</a> and <a class="reference external" href="https://postgis.net/docs/RT_ST_HillShade.html">ST_HillShade()</a> that are only available in PostGIS 2.1 or higher versions. They permit the specification of a custom extent to constrain the processing area of the input raster. Let’s generate a slope raster from a subset of our SRTM raster tiles using ST_Slope(). A slope raster computes the rate of elevation change from one pixel to a neighboring pixel. Let’s use EPSG:26918 as the projection that best fits our purpose and to be able to use <a class="reference external" href="https://postgis.net/docs/ST_DWithin.html">ST_DWithin</a>.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">r</span> <span class="k">AS</span> <span class="p">(</span> <span class="c1">-- union of filtered tiles</span>
+  <span class="k">SELECT</span>
+          <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ST_Union</span><span class="p">(</span><span class="n">srtm</span><span class="p">.</span><span class="n">rast</span><span class="p">),</span> <span class="mi">26918</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rast</span>
+  <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">srtm</span> <span class="k">as</span> <span class="n">srtm</span>
+  <span class="k">JOIN</span> <span class="n">singleny</span> <span class="n">ny</span>
+          <span class="k">ON</span> <span class="n">ST_DWithin</span><span class="p">(</span><span class="n">ST_Transform</span><span class="p">(</span><span class="n">srtm</span><span class="p">.</span><span class="n">rast</span><span class="p">::</span><span class="n">geometry</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="p">),</span> <span class="n">cx</span> <span class="k">AS</span> <span class="p">(</span> <span class="c1">-- custom extent</span>
+        <span class="k">SELECT</span>
+                <span class="n">ST_AsRaster</span><span class="p">(</span><span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="n">r</span><span class="p">.</span><span class="n">rast</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rast</span>
+        <span class="k">FROM</span> <span class="n">singleny</span> <span class="n">ny</span>
+        <span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">r</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+        <span class="n">ST_Clip</span><span class="p">(</span><span class="n">ST_Slope</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cx</span><span class="p">.</span><span class="n">rast</span><span class="p">),</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">))</span> <span class="k">AS</span> <span class="n">rast</span>
+<span class="k">FROM</span> <span class="n">r</span>
+<span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">cx</span>
+<span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">singleny</span> <span class="n">ny</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These queries may take a few seconds/minutes to finish for the raster calculations it’s doing, be patient. You can create a table to visualize it then in QGIS.</p>
+</div>
+<ol class="arabic simple" start="27">
+<li>You will notice that QGIS does not show your raster layers as it does with the vector ones. There’s a workaround this. Go to the DB Manager and there will be listed all your raster tables, click on the desired one to and and select <strong>Add to Canvas</strong>.</li>
+</ol>
+<img alt="_images/rasters_06.png" class="inline" src="_images/rasters_06.png" />
+<p>The following image shows the two SRTM covering New York already unioned.</p>
+<img alt="_images/rasters_07.png" class="inline" src="_images/rasters_07.png" />
+<p>This is how the slope looks with the Magma style applied to it, we can se how areas like Manhattan have higher elevation than others:</p>
+<img alt="_images/rasters_08.png" class="inline" src="_images/rasters_08.png" />
+<ol class="arabic simple" start="27">
+<li>We can reuse the ST_Slope() query and substitute ST_HillShade() for ST_Slope() to create a hillshade raster showing how the sun would illuminate the terrain of the SRTM raster.</li>
+</ol>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span> <span class="n">r</span> <span class="k">AS</span> <span class="p">(</span> <span class="c1">-- union of filtered tiles</span>
+  <span class="k">SELECT</span>
+          <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ST_Union</span><span class="p">(</span><span class="n">srtm</span><span class="p">.</span><span class="n">rast</span><span class="p">),</span> <span class="mi">26918</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rast</span>
+  <span class="k">FROM</span> <span class="n">rasters</span><span class="p">.</span><span class="n">srtm</span> <span class="n">srtm</span>
+  <span class="k">JOIN</span> <span class="n">singleny</span> <span class="n">ny</span>
+          <span class="k">ON</span> <span class="n">ST_DWithin</span><span class="p">(</span><span class="n">ST_Transform</span><span class="p">(</span><span class="n">srtm</span><span class="p">.</span><span class="n">rast</span><span class="p">::</span><span class="n">geometry</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="p">),</span> <span class="n">cx</span> <span class="k">AS</span> <span class="p">(</span> <span class="c1">-- custom extent</span>
+        <span class="k">SELECT</span>
+                <span class="n">ST_AsRaster</span><span class="p">(</span><span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span> <span class="n">r</span><span class="p">.</span><span class="n">rast</span><span class="p">)</span> <span class="k">AS</span> <span class="n">rast</span>
+        <span class="k">FROM</span> <span class="n">singleny</span> <span class="n">ny</span>
+        <span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">r</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+        <span class="n">ST_Clip</span><span class="p">(</span><span class="n">ST_HillShade</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">rast</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cx</span><span class="p">.</span><span class="n">rast</span><span class="p">),</span> <span class="n">ST_Transform</span><span class="p">(</span><span class="n">ny</span><span class="p">.</span><span class="n">geom</span><span class="p">,</span> <span class="mi">26918</span><span class="p">))</span> <span class="k">AS</span> <span class="n">rast</span>
+<span class="k">FROM</span> <span class="n">r</span>
+<span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">cx</span>
+<span class="k">CROSS</span> <span class="k">JOIN</span> <span class="n">singleny</span> <span class="n">ny</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The output visualized looks like this:</p>
+<img alt="_images/rasters_09.png" class="inline" src="_images/rasters_09.png" />
+<p>For this course some instructions were taken from the <a class="reference external" href="https://www.amazon.com/PostGIS-Cookbook-organize-manipulate-analyze-ebook/dp/B075V94LS6/ref=dp_ob_image_def">PostGIS Cookbook 2nd Edition</a>, you’re welcome to go further into it.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

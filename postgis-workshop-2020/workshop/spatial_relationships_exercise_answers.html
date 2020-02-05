@@ -1,0 +1,156 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spatial Relationships Exercise Answers &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spatial-relationships-exercise-answers">
+<span id="id1"></span><h1>Spatial Relationships Exercise Answers<a class="headerlink" href="#spatial-relationships-exercise-answers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="exercises-with-answers">
+<h2>Exercises with answers<a class="headerlink" href="#exercises-with-answers" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><strong>“What is the geometry value for the street named ‘Atlantic Commons’?”</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">ST_AsText</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+  <span class="k">FROM</span> <span class="n">nyc_streets</span>
+  <span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Atlantic Commons&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MULTILINESTRING</span><span class="p">((</span><span class="mf">586781.701577724</span> <span class="mf">4504202.15314339</span><span class="p">,</span><span class="mf">586863.51964484</span> <span class="mf">4504215.9881701</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>“What neighborhood and borough is Atlantic Commons in?”</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span><span class="p">,</span> <span class="n">boroname</span>
+<span class="k">FROM</span> <span class="n">nyc_neighborhoods</span>
+<span class="k">WHERE</span> <span class="n">ST_Intersects</span><span class="p">(</span>
+  <span class="n">geom</span><span class="p">,</span>
+  <span class="n">ST_GeomFromText</span><span class="p">(</span><span class="s1">&#39;LINESTRING(586782 4504202,586864 4504216)&#39;</span><span class="p">,</span> <span class="mi">26918</span><span class="p">)</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">name</span>    <span class="o">|</span> <span class="n">boroname</span>
+<span class="o">------------+----------</span>
+ <span class="n">Fort</span> <span class="n">Green</span> <span class="o">|</span> <span class="n">Brooklyn</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>“Hey, why did you change from a ‘MULTILINESTRING’ to a ‘LINESTRING’?” Spatially they describe the same shape, so going from a single-item multi-geometry to a singleton saves a few keystrokes.</p>
+<p class="last">More importantly, we also rounded the coordinates to make them easier to read, which does actually change results: we couldn’t use the ST_Touches() predicate to find out which roads join Atlantic Commons, because the coordinates are not exactly the same anymore.</p>
+</div>
+</li>
+<li><p class="first"><strong>“What streets does Atlantic Commons join with?”</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">name</span>
+<span class="k">FROM</span> <span class="n">nyc_streets</span>
+<span class="k">WHERE</span> <span class="n">ST_DWithin</span><span class="p">(</span>
+  <span class="n">geom</span><span class="p">,</span>
+  <span class="n">ST_GeomFromText</span><span class="p">(</span><span class="s1">&#39;LINESTRING(586782 4504202,586864 4504216)&#39;</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span>
+  <span class="mi">0</span><span class="p">.</span><span class="mi">1</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">name</span>
+<span class="o">------------------</span>
+ <span class="n">Cumberland</span> <span class="n">St</span>
+ <span class="n">Atlantic</span> <span class="n">Commons</span>
+</pre></div>
+</div>
+<img alt="_images/atlantic_commons.jpg" src="_images/atlantic_commons.jpg" />
+</li>
+<li><p class="first"><strong>“Approximately how many people live on (within 50 meters of) Atlantic Commons?”</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="k">Sum</span><span class="p">(</span><span class="n">popn_total</span><span class="p">)</span>
+  <span class="k">FROM</span> <span class="n">nyc_census_blocks</span>
+  <span class="k">WHERE</span> <span class="n">ST_DWithin</span><span class="p">(</span>
+   <span class="n">geom</span><span class="p">,</span>
+   <span class="n">ST_GeomFromText</span><span class="p">(</span><span class="s1">&#39;LINESTRING(586782 4504202,586864 4504216)&#39;</span><span class="p">,</span> <span class="mi">26918</span><span class="p">),</span>
+   <span class="mi">50</span>
+  <span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1438</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

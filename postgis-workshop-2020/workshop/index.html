@@ -1,0 +1,224 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Introduction to PostGIS &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. Welcome" href="welcome.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="welcome.html" title="1. Welcome"
+             accesskey="N">next</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction-to-postgis">
+<h1>Introduction to PostGIS<a class="headerlink" href="#introduction-to-postgis" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">This workshop uses a <a class="reference external" href="http://s3.cleverelephant.ca/postgis-workshop-2018.zip">data bundle</a>. Download and extract this data bundle to a convenient location.</p>
+</li>
+<li><p class="first">This workshop uses the following software:</p>
+<ul class="simple">
+<li><strong class="command">PostgreSQL</strong> database, along with <strong class="command">PgAdmin</strong> application, and command line tool <strong class="command">psql</strong>.</li>
+<li><strong class="command">PostGIS</strong> extension.</li>
+</ul>
+<p>To comply with the required software, follow the <a class="reference internal" href="setup/installation.html#installation"><span class="std std-ref">Installation</span></a> instruction of this workshop, these will guide you while installing PostGIS requirements for different platforms according to the official versions available at the time of making this tutorial.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="workshop-materials">
+<h2>Workshop Materials<a class="headerlink" href="#workshop-materials" title="Permalink to this headline">¶</a></h2>
+<p>Inside the data bundle, you will find:</p>
+<dl class="docutils">
+<dt><strong>workshop/</strong></dt>
+<dd>a directory containing this HTML workshop</dd>
+<dt><strong>data/</strong></dt>
+<dd>a directory containing the shapefiles and necesary data for the raster section we will be loading</dd>
+</dl>
+<p>All the data in the package is public domain and freely redistributable. All the software in the package is open source, and freely redistributable. This workshop is licensed as Creative Commons “<a class="reference external" href="http://creativecommons.org/licenses/by-sa/3.0/us/">share alike with attribution</a>”, and is freely redistributable under the terms of that license.</p>
+</div>
+<div class="section" id="workshop-modules">
+<h2>Workshop Modules<a class="headerlink" href="#workshop-modules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#workshop-conventions">1.1. Workshop Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#what-is-a-spatial-database">2.1. What is a Spatial Database?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#what-is-postgis">2.2. What is PostGIS?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#prerequisite-knowledge">3.1. Prerequisite Knowledge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#educational-approach">3.2. Educational Approach</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#installation">4.1. Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#creating-a-spatial-database">4.2. Creating a Spatial Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#loading-spatial-data">4.3. Loading spatial data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#about-our-data">4.4. About our data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#simple-sql">5.1. Simple SQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#simple-sql-exercises">5.2. Simple SQL Exercises</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#geometries">5.3. Geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#geometry-exercises">5.4. Geometry Exercises</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#spatial-relationships">5.5. Spatial Relationships</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#spatial-relationships-exercises">5.6. Spatial Relationships Exercises</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#spatial-joins">5.7. Spatial Joins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#spatial-joins-exercises">5.8. Spatial Joins Exercises</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#spatial-indexing">5.9. Spatial Indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#projecting-data">5.10. Projecting Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#projection-exercises">5.11. Projection Exercises</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#geography">5.12. Geography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic.html#geometry-constructing-functions">5.13. Geometry Constructing Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#more-spatial-joins">6.1. More Spatial Joins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#validity">6.2. Validity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#equality">6.3. Equality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#linear-referencing">6.4. Linear Referencing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#dimensionally-extended-9-intersection-model">6.5. Dimensionally Extended 9-Intersection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#clustering-on-indices">6.6. Clustering on Indices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#d">6.7. 3-D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#nearest-neighbour-searching">6.8. Nearest-Neighbour Searching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#tracking-edit-history-using-triggers">6.9. Tracking Edit History using Triggers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#advanced-geometry-constructions">6.10. Advanced Geometry Constructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#working-with-rasters">6.11. Working with Rasters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html#postgresql-security">7.1. PostgreSQL Security</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html#postgresql-schemas">7.2. PostgreSQL Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html#postgresql-backup-and-restore">7.3. PostgreSQL Backup and Restore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html#tuning-postgresql-for-spatial">7.4. Tuning PostgreSQL for Spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="maintenance.html#software-upgrades">7.5. Software Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="postgis-functions.html#constructors">8.1. Constructors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="postgis-functions.html#outputs">8.2. Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="postgis-functions.html#measurements">8.3. Measurements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="postgis-functions.html#relationships">8.4. Relationships</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="links-to-have-on-hand">
+<h2>Links to have on hand<a class="headerlink" href="#links-to-have-on-hand" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>PostGIS - <a class="reference external" href="http://postgis.net/">http://postgis.net/</a><ul>
+<li>Docs - <a class="reference external" href="http://postgis.net/docs/">http://postgis.net/docs/</a></li>
+</ul>
+</li>
+<li>PostgreSQL - <a class="reference external" href="http://www.postgresql.org/">http://www.postgresql.org/</a><ul>
+<li>Docs - <a class="reference external" href="http://www.postgresql.org/docs/">http://www.postgresql.org/docs/</a></li>
+<li>Downloads - <a class="reference external" href="http://www.postgresql.org/download/">http://www.postgresql.org/download/</a></li>
+<li>JDBC Driver - <a class="reference external" href="http://jdbc.postgresql.org/">http://jdbc.postgresql.org/</a></li>
+<li>.Net Driver - <a class="reference external" href="http://npgsql.projects.postgresql.org/">http://npgsql.projects.postgresql.org/</a></li>
+<li>Python Driver - <a class="reference external" href="http://www.pygresql.org/">http://www.pygresql.org/</a></li>
+<li>C/C++ Driver - <a class="reference external" href="http://www.postgresql.org/docs/10/static/libpq.html">http://www.postgresql.org/docs/10/static/libpq.html</a></li>
+</ul>
+</li>
+<li>PgAdmin III - <a class="reference external" href="http://www.pgadmin.org/">http://www.pgadmin.org/</a></li>
+<li>Open Source Desktop Clients<ul>
+<li>QGIS - <a class="reference external" href="http://qgis.org/">http://qgis.org/</a></li>
+<li>OpenJUMP - <a class="reference external" href="http://openjump.org/">http://openjump.org/</a></li>
+<li>uDig - <a class="reference external" href="http://udig.refractions.net/">http://udig.refractions.net/</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="#">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maintenance.html">7. Maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="welcome.html"
+                        title="next chapter">1. Welcome</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="welcome.html" title="1. Welcome"
+             >next</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>

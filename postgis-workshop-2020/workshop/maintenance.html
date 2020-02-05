@@ -1,0 +1,813 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>7. Maintenance &#8212; Introduction to PostGIS</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="8. Appendix A: PostGIS Functions" href="postgis-functions.html" />
+    <link rel="prev" title="6. Advanced PostGIS" href="advanced.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="postgis-functions.html" title="8. Appendix A: PostGIS Functions"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="advanced.html" title="6. Advanced PostGIS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="maintenance">
+<h1>7. Maintenance<a class="headerlink" href="#maintenance" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="postgresql-security">
+<span id="security"></span><h2>7.1. PostgreSQL Security<a class="headerlink" href="#postgresql-security" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="authentication">
+<h3>7.1.1. Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h3>
+<p>PostgreSQL supports many different <a class="reference external" href="http://www.postgresql.org/docs/current/static/auth-methods.html">authentication methods</a>, to allow easy integration into existing enterprise architectures. For production purposes, the following methods are commonly used:</p>
+<ul class="simple">
+<li><strong>Password</strong> is the basic system where the passwords are stored by the database, with MD5 encryption.</li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Kerberos_(protocol)">Kerberos</a> is a standard enterprise authentication method, which is used by both the <a class="reference external" href="&lt;http://en.wikipedia.org/wiki/Generic_Security_Services_Application_Program_Interface&gt;">GSSAPI</a> and <a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa380493(v=vs.85).aspx">SSPI</a> schemes in PostgreSQL. Using <a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa380493(v=vs.85).aspx">SSPI</a>, PostgreSQL can authenticate against Windows servers.</li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol">LDAP</a> is another common enterprise authentication method. The <a class="reference external" href="http://www.openldap.org/">OpenLDAP</a> server bundled with most Linux distributions provides an open source implementation of <a class="reference external" href="http://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol">LDAP</a>.</li>
+<li><strong>Certificate</strong> authentication is an option if you expect all client connections to be via SSL and are able to manage the distribution of keys.</li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Pluggable_authentication_module">PAM</a> authentication is an option if you are on Linux or Solaris and use the <a class="reference external" href="http://en.wikipedia.org/wiki/Pluggable_authentication_module">PAM</a> scheme for transparent authentication provision.</li>
+</ul>
+<p>Authentication methods are controlled by the <code class="docutils literal notranslate"><span class="pre">pg_hba.conf</span></code> file. The “HBA” in the file name stands for “host based access”, because in addition to allowing you to specify the authentication method to use for each database, it allows you to limit host access using network addresses.</p>
+<p>Here is an example <code class="docutils literal notranslate"><span class="pre">pg_hba.conf</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD</span>
+
+<span class="c1"># &quot;local&quot; is for Unix domain socket connections only</span>
+<span class="n">local</span>   <span class="nb">all</span>         <span class="nb">all</span>                               <span class="n">trust</span>
+<span class="c1"># IPv4 local connections:</span>
+<span class="n">host</span>    <span class="nb">all</span>         <span class="nb">all</span>         <span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">/</span><span class="mi">32</span>          <span class="n">trust</span>
+<span class="c1"># IPv6 local connections:</span>
+<span class="n">host</span>    <span class="nb">all</span>         <span class="nb">all</span>         <span class="p">::</span><span class="mi">1</span><span class="o">/</span><span class="mi">128</span>               <span class="n">trust</span>
+<span class="c1"># remote connections for nyc database only</span>
+<span class="n">host</span>    <span class="n">nyc</span>         <span class="nb">all</span>         <span class="mf">192.168</span><span class="o">.</span><span class="mf">1.0</span><span class="o">/</span><span class="mi">2</span>         <span class="n">ldap</span>
+</pre></div>
+</div>
+<p>The file consists of five columns</p>
+<ul class="simple">
+<li><strong>TYPE</strong> determines the kind of access, either “local” for connections from the same server or “host” for remote connections.</li>
+<li><strong>DATABASE</strong> specifies what database the configuration line refers to or “all” for all databases</li>
+<li><strong>USER</strong> specifies what users the line refers to or “all” for all users</li>
+<li><strong>CIDR-ADDRESS</strong> specifies the network limitations for remote connections, using network/netmask syntax</li>
+<li><strong>METHOD</strong> specifies the authentication protocol to use. “trust” skips authentication entirely and simply accepts any valid username without challenge. Other options are: “reject” which rejects the connection, “md5” which requires an md5 encrypted password, “password” which requires an unencrypted password, “gss” which uses GSSAPI to authenticate the user, “sspi” which uses SSPI to authenticate the user (only for Windows), “ident”, “peer” which obtains the client’s operating system user name from the operating system and check if it matches the requested database user name (for local connections), “ldap”, “radius”, “cert”, “pam”, and “bsd”. See the <a class="reference external" href="https://www.postgresql.org/docs/11/auth-pg-hba-conf.html">pg_hba.conf documentation for more info</a>.</li>
+</ul>
+<p>It’s common for local connections to be trusted, since access to the server itself is usually privileged. Remote connections are disabled by default when PostgreSQL is installed: if you want to connect from remote machines, you’ll have to add an entry.</p>
+<p>The line for <code class="docutils literal notranslate"><span class="pre">nyc</span></code> in the example above is an example of a remote access entry. The <code class="docutils literal notranslate"><span class="pre">nyc</span></code> example allows LDAP authenticated access only to machines on the local network (in this case the 192.168.1. network) and only to the nyc database. Depending on the security of your network, you will use more or less strict versions of these rules in your production set-up.</p>
+</div>
+<div class="section" id="authorization">
+<h3>7.1.2. Authorization<a class="headerlink" href="#authorization" title="Permalink to this headline">¶</a></h3>
+<p>PostgreSQL has a rich and flexible permissions system, with the ability to parcel out particular privileges to particular <a class="reference external" href="http://www.postgresql.org/docs/current/static/user-manag.html">roles</a>, and provide users with the powers of one or more of those <a class="reference external" href="http://www.postgresql.org/docs/current/static/user-manag.html">roles</a>.</p>
+<p>In addition, the PostgreSQL server can use multiple different systems to authenticate users. This means that the database can use the same authentication infrastructure as other architecture components, simplifying password management.</p>
+</div>
+<div class="section" id="users-and-roles">
+<h3>7.1.3. Users and Roles<a class="headerlink" href="#users-and-roles" title="Permalink to this headline">¶</a></h3>
+<p>In this chapter we will create two useful production users:</p>
+<ul class="simple">
+<li>A read-only user for use in a publishing application.</li>
+<li>A read/write user for use by a developer in building a software or analyzing data.</li>
+</ul>
+<p>Rather than creating users and granting them the necessary powers, we will create two roles with the right powers and then create two users and add them to the appropriate roles. That way we can easily reuse the roles when we create further users.</p>
+<div class="section" id="creating-roles">
+<h4>7.1.3.1. Creating Roles<a class="headerlink" href="#creating-roles" title="Permalink to this headline">¶</a></h4>
+<p>A role is a user and a user is a role. The only difference is that a “user” can be said to be a role with the “login” privilege.</p>
+<p>So functionally, the two SQL statements below are the same, they both create a “role with the login privilege”, which is to say, a “user”.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">mrbean</span> <span class="n">LOGIN</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">USER</span> <span class="n">mrbean</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="read-only-users">
+<h4>7.1.3.2. Read-only Users<a class="headerlink" href="#read-only-users" title="Permalink to this headline">¶</a></h4>
+<p>Our read-only user will be for a web application to use to query the <code class="docutils literal notranslate"><span class="pre">nyc_streets</span></code> table.</p>
+<p>The application will have specific access to the <code class="docutils literal notranslate"><span class="pre">nyc_streets</span></code> table, but will also inherit the necessary system access for PostGIS operations from the <code class="docutils literal notranslate"><span class="pre">postgis_reader</span></code> role.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- A user account for the web app</span>
+<span class="k">CREATE</span> <span class="k">USER</span> <span class="n">app1</span><span class="p">;</span>
+<span class="c1">-- Web app needs access to specific data tables</span>
+<span class="k">GRANT</span> <span class="k">SELECT</span> <span class="k">ON</span> <span class="n">nyc_streets</span> <span class="k">TO</span> <span class="n">app1</span><span class="p">;</span>
+
+<span class="c1">-- A generic role for access to PostGIS functionality</span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">postgis_reader</span> <span class="n">INHERIT</span><span class="p">;</span>
+<span class="c1">-- Give that role to the web app</span>
+<span class="k">GRANT</span> <span class="n">postgis_reader</span> <span class="k">TO</span> <span class="n">app1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Now, use the psql command line to login as as app1:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">psql</span> <span class="o">-</span><span class="n">d</span> <span class="n">nyc</span> <span class="o">-</span><span class="n">U</span> <span class="n">app1</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Try the following queries:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- This works!</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">nyc_streets</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="c1">-- This works too!</span>
+<span class="k">SELECT</span> <span class="n">ST_AsText</span><span class="p">(</span><span class="n">ST_Transform</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="mi">4326</span><span class="p">))</span>
+  <span class="k">FROM</span> <span class="n">nyc_streets</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">INHERIT</span></code> clause granted postgis_reader with the privilegedges that all the roles in the database have. Now we have a nice generic <code class="docutils literal notranslate"><span class="pre">postgis_reader</span></code> role we can apply to any user that need to read from PostGIS tables.</p>
+</div>
+<div class="section" id="read-write-users">
+<h4>7.1.3.3. Read/write Users<a class="headerlink" href="#read-write-users" title="Permalink to this headline">¶</a></h4>
+<p>There are two kinds of read/write scenarios we need to consider:</p>
+<ul class="simple">
+<li>Web applications and others that need to write to existing data tables.</li>
+<li>Developers or analysts that need to create new tables and geometry columns as part of their work.</li>
+</ul>
+<p>For web applications that require write access to data tables, we just need to grant extra permissions to the tables themselves, and we can continue to use the <code class="docutils literal notranslate"><span class="pre">postgis_reader</span></code> role.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Add insert/update/delete abilities to our web application</span>
+<span class="k">GRANT</span> <span class="k">INSERT</span><span class="p">,</span><span class="k">UPDATE</span><span class="p">,</span><span class="k">DELETE</span> <span class="k">ON</span> <span class="n">nyc_streets</span> <span class="k">TO</span> <span class="n">app1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>These kinds of permissions would be required for a read/write WFS service, for example.</p>
+<p>For developers and analysts, a little more access is needed to the main PostGIS metadata tables.  We will need a <code class="docutils literal notranslate"><span class="pre">postgis_writer</span></code> role that can edit the PostGIS metadata tables!</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Make a postgis writer role</span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">postgis_writer</span><span class="p">;</span>
+
+<span class="c1">-- Start by giving it the postgis_reader powers</span>
+<span class="k">GRANT</span> <span class="n">postgis_reader</span> <span class="k">TO</span> <span class="n">postgis_writer</span><span class="p">;</span>
+
+<span class="c1">-- Add insert/update/delete powers for the PostGIS tables</span>
+<span class="k">GRANT</span> <span class="k">INSERT</span><span class="p">,</span><span class="k">UPDATE</span><span class="p">,</span><span class="k">DELETE</span> <span class="k">ON</span> <span class="n">spatial_ref_sys</span> <span class="k">TO</span> <span class="n">postgis_writer</span><span class="p">;</span>
+
+<span class="c1">-- Make app1 a PostGIS writer to see if it works!</span>
+<span class="k">GRANT</span> <span class="n">postgis_writer</span> <span class="k">TO</span> <span class="n">app1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Now try the table creation SQL above as the app1 user and see how it goes!</p>
+</div>
+</div>
+<div class="section" id="encryption">
+<h3>7.1.4. Encryption<a class="headerlink" href="#encryption" title="Permalink to this headline">¶</a></h3>
+<p>PostgreSQL provides a lot of <a class="reference external" href="http://www.postgresql.org/docs/current/static/encryption-options.html">encryption facilities</a>, many of them optional, some of them on by default.</p>
+<ul class="simple">
+<li>By default, all passwords are MD5 encrypted. The client/server handshake double encrypts the MD5 password to prevent re-use of the hash by anyone who intercepts the password. It is also possible to use SCRAM which is an Internet standard.</li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/libpq-ssl.html">SSL connections</a> are optionally available between the client and server, to encrypt all data and login information. SSL certificate authentication is also available when SSL connections are used.</li>
+<li>Columns inside the database can be encrypted using the <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgcrypto.html">pgcrypto</a> module, which includes hashing algorithms, direct ciphers (blowfish, aes) and both public key and symmetric PGP encryption.</li>
+</ul>
+<div class="section" id="id1">
+<h4>7.1.4.1. SSL Connections<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>In order to use SSL connections, both your client and server must support SSL. Your version of PostgreSQL may have SSL support built, but not enabled. If so, we have to carry out a few steps to turn it on first.</p>
+<ul>
+<li><p class="first">First, turn shut down PostgreSQL, since activating SSL will require a restart.</p>
+</li>
+<li><p class="first">Next, we acquire or generate an SSL certificate and key. The certificate will need to have no passphrase on it, or the database server won’t be able to start up. You can generate a self-signed key as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new certificate, filling out the certification info as prompted</span>
+<span class="n">openssl</span> <span class="n">req</span> <span class="o">-</span><span class="n">new</span> <span class="o">-</span><span class="n">text</span> <span class="o">-</span><span class="n">out</span> <span class="n">server</span><span class="o">.</span><span class="n">req</span>
+
+<span class="c1"># Strip the passphrase from the certificate</span>
+<span class="n">openssl</span> <span class="n">rsa</span> <span class="o">-</span><span class="ow">in</span> <span class="n">privkey</span><span class="o">.</span><span class="n">pem</span> <span class="o">-</span><span class="n">out</span> <span class="n">server</span><span class="o">.</span><span class="n">key</span>
+
+<span class="c1"># Convert the certificate into a self-signed cert</span>
+<span class="n">openssl</span> <span class="n">req</span> <span class="o">-</span><span class="n">x509</span> <span class="o">-</span><span class="ow">in</span> <span class="n">server</span><span class="o">.</span><span class="n">req</span> <span class="o">-</span><span class="n">text</span> <span class="o">-</span><span class="n">key</span> <span class="n">server</span><span class="o">.</span><span class="n">key</span> <span class="o">-</span><span class="n">out</span> <span class="n">server</span><span class="o">.</span><span class="n">crt</span>
+
+<span class="c1"># Set the permission of the key to private read/write</span>
+<span class="n">chmod</span> <span class="n">og</span><span class="o">-</span><span class="n">rwx</span> <span class="n">server</span><span class="o">.</span><span class="n">key</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Copy the <code class="docutils literal notranslate"><span class="pre">server.crt</span></code> and <code class="docutils literal notranslate"><span class="pre">server.key</span></code> into the PostgreSQL data directory.</p>
+</li>
+<li><p class="first">Enable SSL support in the <code class="docutils literal notranslate"><span class="pre">postgresql.conf</span></code> file by turning the “ssl” parameter to “on”.</p>
+<img alt="_images/ssl_conf.jpg" src="_images/ssl_conf.jpg" />
+</li>
+<li><p class="first">Now re-start PostgreSQL. The server is now ready for SSL operation.</p>
+</li>
+</ul>
+<p>With the server enabled for SSL, creating an encrypted connection is easy. In PgAdmin, create a new server connection (File &gt; Add Server…), and set the SSL parameter to “require”.</p>
+<img alt="_images/ssl_create.jpg" src="_images/ssl_create.jpg" />
+<p>Once you connect with the new connection, you can see in its properties that it is using an SSL connection.</p>
+<img alt="_images/ssl_props.jpg" src="_images/ssl_props.jpg" />
+<p>Since the default SSL connection mode is “prefer”, you don’t even need to specify an SSL preference when connecting. A connection with the command line <code class="docutils literal notranslate"><span class="pre">psql</span></code> terminal will pick up the SSL option and use it by default:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">psql</span> <span class="p">(</span><span class="mf">8.4</span><span class="o">.</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">SSL</span> <span class="n">connection</span> <span class="p">(</span><span class="n">cipher</span><span class="p">:</span> <span class="n">DHE</span><span class="o">-</span><span class="n">RSA</span><span class="o">-</span><span class="n">AES256</span><span class="o">-</span><span class="n">SHA</span><span class="p">,</span> <span class="n">bits</span><span class="p">:</span> <span class="mi">256</span><span class="p">)</span>
+<span class="n">Type</span> <span class="s2">&quot;help&quot;</span> <span class="k">for</span> <span class="n">help</span><span class="o">.</span>
+
+<span class="n">postgres</span><span class="o">=</span><span class="c1">#</span>
+</pre></div>
+</div>
+<p>Note how the terminal reports the SSL status of the connection.</p>
+</div>
+<div class="section" id="data-encryption">
+<h4>7.1.4.2. Data Encryption<a class="headerlink" href="#data-encryption" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgcrypto.html">pgcrypto</a> module has a huge range of encryption options, so we will only demonstrate the simplest use case: encrypting a column of data using a symmetric cipher.</p>
+<ul class="simple">
+<li>First, enable pgcrypto by creating the EXTENSION, either in PgAdmin or psql.</li>
+</ul>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="n">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> <span class="n">pgcrypto</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">Then, test the encryption function. The first parameter is the <strong>data to encrypt</strong>, the second is the user selected <strong>cipher key</strong>, and the third is the <strong>algorithm</strong> used to encrypt which in this case <em>bf</em> stands for <em>blowfish</em>, another option for this is <em>aes</em> which stands for <em>AES (Rijndael-128)</em>.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- encrypt a string using blowfish (bf)</span>
+<span class="k">SELECT</span> <span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;this is a test phrase&#39;</span><span class="p">,</span> <span class="s1">&#39;mykey&#39;</span><span class="p">,</span> <span class="s1">&#39;bf&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">And make sure it’s reversible too!</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- round-trip a string using blowfish (bf)</span>
+<span class="k">SELECT</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">encrypt</span><span class="p">(</span><span class="s1">&#39;this is a test phrase&#39;</span><span class="p">,</span> <span class="s1">&#39;mykey&#39;</span><span class="p">,</span> <span class="s1">&#39;bf&#39;</span><span class="p">),</span> <span class="s1">&#39;mykey&#39;</span><span class="p">,</span> <span class="s1">&#39;bf&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="links">
+<h3>7.1.5. Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/auth-methods.html">PostgreSQL Authentication</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/encryption-options.html">PostgreSQL Encrpyption</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/libpq-ssl.html">PostgreSQL SSL Support</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="postgresql-schemas">
+<span id="schemas"></span><h2>7.2. PostgreSQL Schemas<a class="headerlink" href="#postgresql-schemas" title="Permalink to this headline">¶</a></h2>
+<p>Production databases inevitably have a large number of tables and views, and managing them all in one schema can become unwieldy quickly. Fortunately, <a class="reference external" href="http://www.postgresql.org/">PostgreSQL</a> includes the concept of a “_Schema”.</p>
+<p>Schemas are like folders, and can hold tables, views, functions, sequences and other relations.  Every database starts out with one schema, the <code class="docutils literal notranslate"><span class="pre">public</span></code> schema.</p>
+<img alt="_images/schemas.jpg" src="_images/schemas.jpg" />
+<p>Inside that schema, the default install of PostGIS creates the <code class="docutils literal notranslate"><span class="pre">geometry_columns</span></code>, <code class="docutils literal notranslate"><span class="pre">geography_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">spatial_ref_sys</span></code> metadata relations, as well as all the types and functions used by PostGIS. So users of PostGIS always need access to the public schema.</p>
+<p>In the public schema you can also see all the tables we have created so far in the course.</p>
+<div class="section" id="why-use-schemas">
+<h3>7.2.1. Why use Schemas?<a class="headerlink" href="#why-use-schemas" title="Permalink to this headline">¶</a></h3>
+<p>There are two very good reasons for using schemas:</p>
+<ul class="simple">
+<li>Data that is managed in a schema is easier to apply bulk actions to.<ul>
+<li>It’s easier to back-up data that’s in a separate schema: so volatile data can have a different back-up schedule from non-volatile data.</li>
+<li>It’s easier to restore data that’s in a separate schema: so application-oriented schemas can be separately restored and backed up for time travel and recovery.</li>
+<li>It’s easier to manage application differences when the application data is in a schema: so a new version of software can work off a table structure in a new schema, and cut-over involves a simple change to the schema name.</li>
+</ul>
+</li>
+<li>Users can be restricted in their work to single schemas to allow isolation of analytical and test tables from production tables.</li>
+</ul>
+<p>So for production purposes, keeping your application data separate in schemas improves management; and for user purposes, keeping your users in separate schemas keeps them from treading on each other.</p>
+</div>
+<div class="section" id="creating-a-data-schema">
+<h3>7.2.2. Creating a Data Schema<a class="headerlink" href="#creating-a-data-schema" title="Permalink to this headline">¶</a></h3>
+<p>Let’s create a new schema and move a table into it.  First, create a new schema in the database:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">SCHEMA</span> <span class="n">census</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Next, we will move the <code class="docutils literal notranslate"><span class="pre">nyc_census_blocks</span></code> table to the <code class="docutils literal notranslate"><span class="pre">census</span></code> schema:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">nyc_census_blocks</span> <span class="k">SET</span> <span class="k">SCHEMA</span> <span class="n">census</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>If you’re using the <strong class="command">psql</strong> command-line program, you’ll notice that <code class="docutils literal notranslate"><span class="pre">nyc_census_blocks</span></code> has disappeared from your table listing now! If you’re using PgAdmin, you might have to refresh your view to see the new schema and the table inside it.</p>
+<p>You can access tables inside schemas in two ways:</p>
+<ul class="simple">
+<li>by referencing them using <code class="docutils literal notranslate"><span class="pre">schema.table</span></code> notation</li>
+<li>by adding the schema to your <code class="docutils literal notranslate"><span class="pre">search_path</span></code></li>
+</ul>
+<p>Explicit referencing is easy, but it gets tiring to type after a while:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">census</span><span class="p">.</span><span class="n">nyc_census_blocks</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Manipulating the <code class="docutils literal notranslate"><span class="pre">search_path</span></code> is a nice way to provide access to tables in multiple schemas without lots of extra typing.</p>
+<p>You can set the <code class="docutils literal notranslate"><span class="pre">search_path</span></code> at run time using the <code class="docutils literal notranslate"><span class="pre">SET</span></code> command:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SET</span> <span class="n">search_path</span> <span class="o">=</span> <span class="n">census</span><span class="p">,</span> <span class="k">public</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This ensures that all references to relations and functions are searched in both the <code class="docutils literal notranslate"><span class="pre">census</span></code> and the <code class="docutils literal notranslate"><span class="pre">public</span></code> schemas. Remember that all the PostGIS functions and types are in <code class="docutils literal notranslate"><span class="pre">public</span></code> so we don’t want to drop that from the search path.</p>
+<p>Setting the search path every time you connect can get tiring too, but fortunately it’s possible to permanently set the search path for a user:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">ALTER</span> <span class="k">USER</span> <span class="n">postgres</span> <span class="k">SET</span> <span class="n">search_path</span> <span class="o">=</span> <span class="n">census</span><span class="p">,</span> <span class="k">public</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Now the postgres user will always have the <code class="docutils literal notranslate"><span class="pre">census</span></code> schema in their search path.</p>
+</div>
+<div class="section" id="creating-a-user-schema">
+<h3>7.2.3. Creating a User Schema<a class="headerlink" href="#creating-a-user-schema" title="Permalink to this headline">¶</a></h3>
+<p>Users like to create tables, and PostGIS users do so particularly: analysis operations with SQL demand temporary tables for visualization or interim results, so spatial SQL tends to require that users have CREATE privileges more than ordinary database workloads.</p>
+<p>By default, every role in Oracle is given a personal schema. This is a nice practice to use for PostgreSQL users too, and is easy to replicate using PostgreSQL roles, schemas, and search paths.</p>
+<p>Create a new user with table creation privileges (see <a class="reference internal" href="security.html#security"><span class="std std-ref">PostgreSQL Security</span></a> for information about the <code class="docutils literal notranslate"><span class="pre">postgis_writer</span></code> role), then create a schema with that user as the authorization:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">USER</span> <span class="n">myuser</span> <span class="k">WITH</span> <span class="k">ROLE</span> <span class="n">postgis_writer</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">SCHEMA</span> <span class="n">myuser</span> <span class="k">AUTHORIZATION</span> <span class="n">myuser</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>If you log in as that user, you’ll find the default <code class="docutils literal notranslate"><span class="pre">search_path</span></code> for PostgreSQL is actually this:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">show</span> <span class="n">search_path</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">search_path</span>
+<span class="o">----------------</span>
+ <span class="s2">&quot;$user&quot;</span><span class="p">,</span><span class="n">public</span>
+</pre></div>
+</div>
+<p>The first schema on the search path us the user’s named schema! So now the following conditions exist:</p>
+<ul class="simple">
+<li>The user exists, with the ability to create spatial tables.</li>
+<li>The user’s named schema exists, and the user owns it.</li>
+<li>The user’s search path has the user schema first, so new tables are automatically created there, and queries automatically search there first.</li>
+</ul>
+<p>That’s all there is to it, the user’s default work area is now nicely separated from any tables in other schemas.</p>
+</div>
+</div>
+<div class="section" id="postgresql-backup-and-restore">
+<span id="backup"></span><h2>7.3. PostgreSQL Backup and Restore<a class="headerlink" href="#postgresql-backup-and-restore" title="Permalink to this headline">¶</a></h2>
+<p>There are lots of ways to backup a PostgreSQL database, and the one you choose will depend a great deal on how you are using the database.</p>
+<ul class="simple">
+<li>For relatively static databases, the basic pg_dump/pg_restore tools can be used to take periodic snapshots of the data.</li>
+<li>For frequently changing data, using an “online backup” scheme allows continuous archiving of updates to a secure location.</li>
+</ul>
+<p>Online backup is the basis for replication and stand-by systems for <a class="reference external" href="http://www.postgresql.org/docs/current/static/high-availability.html">high availability</a>, particularly for versions of PostgreSQL &gt;= 9.0.</p>
+<div class="section" id="laying-out-your-data">
+<h3>7.3.1. Laying Out your Data<a class="headerlink" href="#laying-out-your-data" title="Permalink to this headline">¶</a></h3>
+<p>As discussed in <a class="reference internal" href="schemas.html#schemas"><span class="std std-ref">PostgreSQL Schemas</span></a>, ensuring that production data is always stored in separate schemas is a very important <strong>best practice</strong> in managing data. There are two reasons:</p>
+<ul class="simple">
+<li>Backing up and restoring data in schemas is much simpler than managing lists of tables to be backed up individually.</li>
+<li>Keeping data tables out of the “public” schema allows far easier upgrades, as discussed in <a class="reference internal" href="upgrades.html#upgrades"><span class="std std-ref">Software Upgrades</span></a>.</li>
+</ul>
+</div>
+<div class="section" id="basic-backup-and-restore">
+<h3>7.3.2. Basic Backup and Restore<a class="headerlink" href="#basic-backup-and-restore" title="Permalink to this headline">¶</a></h3>
+<p>Backing up a full database is easy using the <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a> utility. The utility is a command-line tool, which makes it easy to automate with scripting, and it can also be invoke via a GUI in the PgAdmin utility.</p>
+<p>To backup our <code class="docutils literal notranslate"><span class="pre">nyc</span></code> database, we can use the GUI, just right-click the database you want to backup:</p>
+<img alt="_images/backup1.jpg" src="_images/backup1.jpg" />
+<p>Enter the name of the backup file you want to create.</p>
+<img alt="_images/backup2.jpg" src="_images/backup2.jpg" />
+<p>Note that there are three backup format options: compress, tar and plain.</p>
+<ul class="simple">
+<li><strong>Plain</strong> is just a textual SQL file. This is the simplest format and in many ways the most flexible, since it can be editing or altered easily and then loaded back into a database, allowing offline changes to things like ownership or other global information.</li>
+<li><strong>Tar</strong> using a UNIX archive format to hold components of the dump in separate files. Using the tar format allows the <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgrestore.html">pg_restore</a> utility to selectively restore parts of the dump.</li>
+<li><strong>Compress</strong> is like the Tar format, but compresses the internal components individually, allowing them to be selectively restored without decompressing the entire archive.</li>
+</ul>
+<p>We’ll check the Compress option and go, saving out a backup file.</p>
+<p>The same operation can be done with the command line like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_dump</span> <span class="o">--</span><span class="n">file</span><span class="o">=</span><span class="n">nyc</span><span class="o">.</span><span class="n">backup</span> <span class="o">--</span><span class="nb">format</span><span class="o">=</span><span class="n">c</span> <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span> <span class="o">--</span><span class="n">username</span><span class="o">=</span><span class="n">postgres</span> <span class="n">nyc</span>
+</pre></div>
+</div>
+<p>Because the backup file is in Compress format, we can view the contents using the <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgrestore.html">pg_restore</a> command to list the manifest. In the PgAdmin GUI, “View” is an option in the panel.</p>
+<img alt="_images/backup3.jpg" src="_images/backup3.jpg" />
+<p>When you look at the manifest, one of the things you might notice is that there are a lot of “FUNCTION” signatures in there.</p>
+<img alt="_images/backup4.jpg" src="_images/backup4.jpg" />
+<p>That’s because the <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a> utility dumps <strong>every</strong> non-system object in the database, and that includes the PostGIS function definitions.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">PostgreSQL 9.1+ includes an “EXTENSION” feature that allows add-on packages like PostGIS to be installed as registered system components and therefore excluded from <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a> output. PostGIS 2.0 and higher support installation using this extension system.</p>
+</div>
+<p>We can see the same manifest from the command-line using <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgrestore.html">pg_restore</a> directly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_restore</span> <span class="o">--</span><span class="nb">list</span> <span class="n">nyc</span><span class="o">.</span><span class="n">backup</span>
+</pre></div>
+</div>
+<p>The problem with a dump file full of PostGIS function signatures is that we really wanted a dump of our data, not our system functions.</p>
+<p>Since every object is in the dump file, we can restore to a blank database and get full functionality. In doing so, we are expecting that system we are restoring to has exactly the same version of PostGIS as the one we dumped from (since the function signature definitions reference a particular version of the PostGIS shared library).</p>
+<p>From the command-line the restore looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">createdb</span> <span class="o">--</span><span class="n">port</span> <span class="mi">54321</span> <span class="n">nyc2</span>
+<span class="n">pg_restore</span> <span class="o">--</span><span class="n">dbname</span><span class="o">=</span><span class="n">nyc2</span> <span class="o">--</span><span class="n">port</span> <span class="mi">54321</span> <span class="o">--</span><span class="n">username</span><span class="o">=</span><span class="n">postgres</span> <span class="n">nyc</span><span class="o">.</span><span class="n">backup</span>
+</pre></div>
+</div>
+<p>Dumping just data, without function signatures, is where having data in schemas is handy, because there is a command-line flag to only dump a particular schema:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_dump</span> <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span> <span class="o">-</span><span class="nb">format</span><span class="o">=</span><span class="n">c</span> <span class="o">--</span><span class="n">schema</span><span class="o">=</span><span class="n">census</span> <span class="o">--</span><span class="n">file</span><span class="o">=</span><span class="n">census</span><span class="o">.</span><span class="n">backup</span>
+</pre></div>
+</div>
+<p>Now when we list the contents of the dump, we see just the data tables we wanted:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_restore</span> <span class="o">--</span><span class="nb">list</span> <span class="n">census</span><span class="o">.</span><span class="n">backup</span>
+
+<span class="p">;</span>
+<span class="p">;</span> <span class="n">Archive</span> <span class="n">created</span> <span class="n">at</span> <span class="n">Thu</span> <span class="n">Aug</span>  <span class="mi">9</span> <span class="mi">11</span><span class="p">:</span><span class="mi">02</span><span class="p">:</span><span class="mi">49</span> <span class="mi">2012</span>
+<span class="p">;</span>     <span class="n">dbname</span><span class="p">:</span> <span class="n">nyc</span>
+<span class="p">;</span>     <span class="n">TOC</span> <span class="n">Entries</span><span class="p">:</span> <span class="mi">11</span>
+<span class="p">;</span>     <span class="n">Compression</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span>
+<span class="p">;</span>     <span class="n">Dump</span> <span class="n">Version</span><span class="p">:</span> <span class="mf">1.11</span><span class="o">-</span><span class="mi">0</span>
+<span class="p">;</span>     <span class="n">Format</span><span class="p">:</span> <span class="n">CUSTOM</span>
+<span class="p">;</span>     <span class="n">Integer</span><span class="p">:</span> <span class="mi">4</span> <span class="nb">bytes</span>
+<span class="p">;</span>     <span class="n">Offset</span><span class="p">:</span> <span class="mi">8</span> <span class="nb">bytes</span>
+<span class="p">;</span>     <span class="n">Dumped</span> <span class="kn">from</span> <span class="nn">database</span> <span class="n">version</span><span class="p">:</span> <span class="mf">8.4</span><span class="o">.</span><span class="mi">9</span>
+<span class="p">;</span>     <span class="n">Dumped</span> <span class="n">by</span> <span class="n">pg_dump</span> <span class="n">version</span><span class="p">:</span> <span class="mf">8.4</span><span class="o">.</span><span class="mi">9</span>
+<span class="p">;</span>
+<span class="p">;</span>
+<span class="p">;</span> <span class="n">Selected</span> <span class="n">TOC</span> <span class="n">Entries</span><span class="p">:</span>
+<span class="p">;</span>
+<span class="mi">6</span><span class="p">;</span> <span class="mi">2615</span> <span class="mi">20091</span> <span class="n">SCHEMA</span> <span class="o">-</span> <span class="n">census</span> <span class="n">postgres</span>
+<span class="mi">146</span><span class="p">;</span> <span class="mi">1259</span> <span class="mi">19845</span> <span class="n">TABLE</span> <span class="n">census</span> <span class="n">nyc_census_blocks</span> <span class="n">postgres</span>
+<span class="mi">145</span><span class="p">;</span> <span class="mi">1259</span> <span class="mi">19843</span> <span class="n">SEQUENCE</span> <span class="n">census</span> <span class="n">nyc_census_blocks_gid_seq</span> <span class="n">postgres</span>
+<span class="mi">2691</span><span class="p">;</span> <span class="mi">0</span> <span class="mi">0</span> <span class="n">SEQUENCE</span> <span class="n">OWNED</span> <span class="n">BY</span> <span class="n">census</span> <span class="n">nyc_census_blocks_gid_seq</span> <span class="n">postgres</span>
+<span class="mi">2692</span><span class="p">;</span> <span class="mi">0</span> <span class="mi">0</span> <span class="n">SEQUENCE</span> <span class="n">SET</span> <span class="n">census</span> <span class="n">nyc_census_blocks_gid_seq</span> <span class="n">postgres</span>
+<span class="mi">2681</span><span class="p">;</span> <span class="mi">2604</span> <span class="mi">19848</span> <span class="n">DEFAULT</span> <span class="n">census</span> <span class="n">gid</span> <span class="n">postgres</span>
+<span class="mi">2688</span><span class="p">;</span> <span class="mi">0</span> <span class="mi">19845</span> <span class="n">TABLE</span> <span class="n">DATA</span> <span class="n">census</span> <span class="n">nyc_census_blocks</span> <span class="n">postgres</span>
+<span class="mi">2686</span><span class="p">;</span> <span class="mi">2606</span> <span class="mi">19853</span> <span class="n">CONSTRAINT</span> <span class="n">census</span> <span class="n">nyc_census_blocks_pkey</span> <span class="n">postgres</span>
+<span class="mi">2687</span><span class="p">;</span> <span class="mi">1259</span> <span class="mi">20078</span> <span class="n">INDEX</span> <span class="n">census</span> <span class="n">nyc_census_blocks_geom_gist</span> <span class="n">postgres</span>
+</pre></div>
+</div>
+<p>Having just the data tables is handy, because it means we can store to a database with any version of PostGIS installed, as we talk about in <a class="reference internal" href="upgrades.html#upgrades"><span class="std std-ref">Software Upgrades</span></a>.</p>
+<div class="section" id="backing-up-users">
+<h4>7.3.2.1. Backing Up Users<a class="headerlink" href="#backing-up-users" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a> utility operates a database at a time (or a schema or table at a time, if you restrict it). However, information about users is is stored across an entire cluster, it’s not stored in any one database!</p>
+<p>To backup your user information, use the <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pg-dumpall.html">pg_dumpall</a> utility, with the “–globals-only” flag.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_dumpall</span> <span class="o">--</span><span class="nb">globals</span><span class="o">-</span><span class="n">only</span> <span class="o">--</span><span class="n">port</span> <span class="mi">54321</span>
+</pre></div>
+</div>
+<p>You can also use <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pg-dumpall.html">pg_dumpall</a> in its default mode to backup an entire cluster, but be aware that, as with <a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a>, you will end up backing up the PostGIS function signatures, so the dump will have to be restored against an identical software installation, it can’t be used as part of an upgrade process.</p>
+</div>
+</div>
+<div class="section" id="online-backup-and-restore">
+<h3>7.3.3. Online Backup and Restore<a class="headerlink" href="#online-backup-and-restore" title="Permalink to this headline">¶</a></h3>
+<p>Online backup and restore allows an administrator to keep an extremely up-to-date set of backup files without the overhead of repeatedly dumping the entire database. If the database is under frequent insert and update load, then online backup might be preferable to basic backup.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The best way to learn about online backup is to read the relevant sections of the PostgreSQL manual on <a class="reference external" href="http://www.postgresql.org/docs/current/static/continuous-archiving.html">continuous archiving and point-in-time recovery</a>. This section of the PostGIS course will just provide a brief snapshot of online backup set-up.</p>
+</div>
+<div class="section" id="how-it-works">
+<h4>7.3.3.1. How it Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h4>
+<p>Rather than continually write to the main data tables, PostgreSQL stores changes initially in “write-ahead logs” (WAL). Taken together, these logs are a complete record of all changes made to a database.  Online backup consists of taking a copy of the database main data table, then taking a copy of each WAL that is generated from then on.</p>
+<img alt="_images/backup5.jpg" src="_images/backup5.jpg" />
+<p>When it is time to recover to a new database, the system starts on the main data copy, then replays all the WAL files into the database. The end result is a restored database in the same state as the original at the time of the last WAL received.</p>
+<p>Because WAL are being written anyways, and transferring copies to an archive server is computationally cheap, online backup is an effective means of keeping a very up-to-date backup of a system without resorting to intensive regular full dumps.</p>
+</div>
+<div class="section" id="archiving-the-wal-files">
+<h4>7.3.3.2. Archiving the WAL Files<a class="headerlink" href="#archiving-the-wal-files" title="Permalink to this headline">¶</a></h4>
+<p>The first thing to do in setting up online backup is to create an archiving method. PostgreSQL archiving methods are the ultimate in flexibility: the PostgreSQL backend simply calls a script specified in the <code class="docutils literal notranslate"><span class="pre">archive_command</span></code> configuration parameter.</p>
+<p>That means archiving can be as simple as copying the file to a network-mounted drive, and as complex as encrypting and emailing the files to the remote archive. Any process you can script you can use to archive the files.</p>
+<p>To turn on archiving we will edit <code class="docutils literal notranslate"><span class="pre">postgresql.conf</span></code>, first turning on WAL archiving:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wal_level</span> <span class="o">=</span> <span class="n">archive</span>
+<span class="n">archive_mode</span> <span class="o">=</span> <span class="n">on</span>
+</pre></div>
+</div>
+<p>And then setting the <code class="docutils literal notranslate"><span class="pre">archive_command</span></code> to copy our archive files to a safe location (changing the destination paths as appropriate):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Unix</span>
+<span class="n">archive_command</span> <span class="o">=</span> <span class="s1">&#39;test ! -f /archivedir/</span><span class="si">%f</span><span class="s1"> &amp;&amp; cp %p /archivedir/</span><span class="si">%f</span><span class="s1">&#39;</span>
+
+<span class="c1"># Windows</span>
+<span class="n">archive_command</span> <span class="o">=</span> <span class="s1">&#39;copy &quot;%p&quot; &quot;C:</span><span class="se">\\</span><span class="s1">archivedir</span><span class="se">\\</span><span class="si">%f</span><span class="s1">&quot;&#39;</span>
+</pre></div>
+</div>
+<p>It is important that the archive command not over-write existing files, so the unix command includes an initial test to ensure that the files aren’t already there. It is also important that the command returns a non-zero status if the copy process fails.</p>
+<p>Once the changes are made you can re-start PostgreSQL to make them effective.</p>
+</div>
+<div class="section" id="taking-the-base-backup">
+<h4>7.3.3.3. Taking the Base Backup<a class="headerlink" href="#taking-the-base-backup" title="Permalink to this headline">¶</a></h4>
+<p>Once the archiving process is in place, you need to take a base back-up.</p>
+<p>Put the database into backup mode (this doesn’t do anything to alter operation of queries or data updates, it just forces a checkpoint and writes a label file indicating when the backup was taken).</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">pg_start_backup</span><span class="p">(</span><span class="s1">&#39;/archivedir/basebackup.tgz&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For the label, using the path to the backup file is a good practice, as it helps you track down where the backup was stored.</p>
+<p>Copy the database to an archival location:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Unix
+tar cvfz /archivedir/basebackup.tgz ${PGDATA}
+</pre></div>
+</div>
+<p>Then tell the database the backup process is complete.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">pg_stop_backup</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>All these steps can of course be scripted for regular base backups.</p>
+</div>
+<div class="section" id="restoring-from-the-archive">
+<h4>7.3.3.4. Restoring from the Archive<a class="headerlink" href="#restoring-from-the-archive" title="Permalink to this headline">¶</a></h4>
+<p>These steps are taking from the PostgreSQL manual on <a class="reference external" href="http://www.postgresql.org/docs/current/static/continuous-archiving.html">continuous archiving and point-in-time recovery</a>.</p>
+<ul class="simple">
+<li>Stop the server, if it’s running.</li>
+<li>If you have the space to do so, copy the whole cluster data directory and any tablespaces to a temporary location in case you need them later. Note that this precaution will require that you have enough free space on your system to hold two copies of your existing database. If you do not have enough space, you should at least save the contents of the cluster’s pg_xlog subdirectory, as it might contain logs which were not archived before the system went down.</li>
+<li>Remove all existing files and subdirectories under the cluster data directory and under the root directories of any tablespaces you are using.</li>
+<li>Restore the database files from your file system backup. Be sure that they are restored with the right ownership (the database system user, not root!) and with the right permissions. If you are using tablespaces, you should verify that the symbolic links in pg_tblspc/ were correctly restored.</li>
+<li>Remove any files present in pg_xlog/; these came from the file system backup and are therefore probably obsolete rather than current. If you didn’t archive pg_xlog/ at all, then recreate it with proper permissions, being careful to ensure that you re-establish it as a symbolic link if you had it set up that way before.</li>
+<li>If you have unarchived WAL segment files that you saved in step 2, copy them into pg_xlog/. (It is best to copy them, not move them, so you still have the unmodified files if a problem occurs and you have to start over.)</li>
+<li>Create a recovery command file recovery.conf in the cluster data directory (see Chapter 26). You might also want to temporarily modify pg_hba.conf to prevent ordinary users from connecting until you are sure the recovery was successful.</li>
+<li>Start the server. The server will go into recovery mode and proceed to read through the archived WAL files it needs. Should the recovery be terminated because of an external error, the server can simply be restarted and it will continue recovery. Upon completion of the recovery process, the server will rename recovery.conf to recovery.done (to prevent accidentally re-entering recovery mode later) and then commence normal database operations.</li>
+<li>Inspect the contents of the database to ensure you have recovered to the desired state. If not, return to step 1. If all is well, allow your users to connect by restoring pg_hba.conf to normal.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>7.3.4. Links<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgdump.html">pg_dump</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pg-dumpall.html">pg_dumpall</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/app-pgrestore.html">pg_restore</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/high-availability.html">PostgreSQL High Availability</a></li>
+<li><a class="reference external" href="http://www.postgresql.org/docs/current/static/continuous-archiving.html">PostgreSQL High Availability Continuous Archiving and PITR</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="tuning-postgresql-for-spatial">
+<span id="tuning"></span><h2>7.4. Tuning PostgreSQL for Spatial<a class="headerlink" href="#tuning-postgresql-for-spatial" title="Permalink to this headline">¶</a></h2>
+<p>PostgreSQL is a very versatile database system, capable of running efficiently in very low-resource environments and environments shared with a variety of other applications.  In order to ensure it will run properly for many different environments, the default configuration is very conservative and not terribly appropriate for a high-performance production database.  Add the fact that geospatial databases have different usage patterns, and the data tend to consist of fewer, much larger records than non-geospatial databases, and you can see that the default configuration will not be totally appropriate for our purposes.</p>
+<p>All of these configuration parameters can be edited in the <code class="file docutils literal notranslate"><span class="pre">postgresql.conf</span></code> configuration file. If using Mac with the postgres app installation, this is <code class="file docutils literal notranslate"><span class="pre">/Users/may/Library/Application</span> <span class="pre">Support/Postgres/var-11/postgresql.conf</span></code> This is a regular text file and can be edited using TextEdit or any other text editor.  The changes will not take effect until the server is restarted.</p>
+<img alt="_images/conf01_mac.png" src="_images/conf01_mac.png" />
+<p>This section describes some of the configuration parameters that should be adjusted for a production-ready geospatial database.  For each section, find the appropriate item in the file, remove the comment symbol <strong>#</strong> and change the <em>Value</em> to the recommended value as described, then after editing all values <strong>Save</strong> the file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These values are recommendations only; each environment will differ and testing is required to determine the optimal configuration.  But this section should get you off to a good start.</p>
+</div>
+<div class="section" id="shared-buffers">
+<h3>7.4.1. shared_buffers<a class="headerlink" href="#shared-buffers" title="Permalink to this headline">¶</a></h3>
+<p>Sets the amount of memory the database server uses for shared memory buffers.  These are shared amongst the back-end processes, as the name suggests.  The default values are typically woefully inadequate for production databases.</p>
+<blockquote>
+<div><p><em>Default value</em>: typically 128MB</p>
+<p><em>Recommended value</em>: 75% of database memory (500MB)</p>
+</div></blockquote>
+<img alt="_images/shared_buffers.png" src="_images/shared_buffers.png" />
+</div>
+<div class="section" id="work-mem">
+<h3>7.4.2. work_mem<a class="headerlink" href="#work-mem" title="Permalink to this headline">¶</a></h3>
+<p>Defines the amount of memory that internal sorting operations and hash tables can consume before the database switches to on-disk files.  This value defines the available memory for each operation; complex queries may have several sort or hash operations running in parallel, and each connected session may be executing a query.</p>
+<p>As such you must consider how many connections and the complexity of expected queries before increasing this value.  The benefit to increasing is that the processing of more of these operations, including ORDER BY, and DISTINCT clauses, merge and hash joins, hash-based aggregation and hash-based processing of subqueries, can be accomplished without incurring disk writes.</p>
+<blockquote>
+<div><p><em>Default value</em>: 4MB</p>
+<p><em>Recommended value</em>: 16MB</p>
+</div></blockquote>
+<img alt="_images/work_mem.png" src="_images/work_mem.png" />
+</div>
+<div class="section" id="maintenance-work-mem">
+<h3>7.4.3. maintenance_work_mem<a class="headerlink" href="#maintenance-work-mem" title="Permalink to this headline">¶</a></h3>
+<p>Defines the amount of memory used for maintenance operations, including vacuuming, index and foreign key creation.  As these operations are not terribly common, the default value may be acceptable.  This parameter can alternately be increased for a single session before the execution of a number of <strong class="command">CREATE INDEX</strong> or <strong class="command">VACUUM</strong> calls as shown below.</p>
+<blockquote>
+<div><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SET</span> <span class="n">maintenance_work_mem</span> <span class="k">TO</span> <span class="s1">&#39;128MB&#39;</span><span class="p">;</span>
+<span class="k">VACUUM</span> <span class="k">ANALYZE</span><span class="p">;</span>
+<span class="k">SET</span> <span class="n">maintenance_work_mem</span> <span class="k">TO</span> <span class="s1">&#39;16MB&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><em>Default value</em>: 64MB</p>
+<p><em>Recommended value</em>: 128MB</p>
+</div></blockquote>
+<img alt="_images/maintenance_work_mem.png" src="_images/maintenance_work_mem.png" />
+</div>
+<div class="section" id="random-page-cost">
+<h3>7.4.4. random_page_cost<a class="headerlink" href="#random-page-cost" title="Permalink to this headline">¶</a></h3>
+<p>This is a unit-less value that represents the cost of a random page access from disk.  This value is relative to a number of other cost parameters including sequential page access, and CPU operation costs.  While there is no magic bullet for this value, the default is generally conservative.  This value can be set on a per-session basis using the <code class="docutils literal notranslate"><span class="pre">SET</span> <span class="pre">random_page_cost</span> <span class="pre">TO</span> <span class="pre">2.0</span></code> command.</p>
+<blockquote>
+<div><p><em>Default value</em>: 4.0</p>
+<p><em>Recommended value</em>: 2.0</p>
+</div></blockquote>
+<img alt="_images/random_page_cost.png" src="_images/random_page_cost.png" />
+</div>
+<div class="section" id="seq-page-cost">
+<h3>7.4.5. seq_page_cost<a class="headerlink" href="#seq-page-cost" title="Permalink to this headline">¶</a></h3>
+<p>This is the parameter that controls the cost of a sequential page access.  This value does not generally require adjustment but the difference between this value and <code class="docutils literal notranslate"><span class="pre">random_page_cost</span></code> greatly affects the choices made by the query planner.  This value can also be set on a per-session basis.</p>
+<blockquote>
+<div><p><em>Default value</em>: 1.0</p>
+<p><em>Recommended value</em>: 1.0</p>
+</div></blockquote>
+<img alt="_images/seq_page_cost.png" src="_images/seq_page_cost.png" />
+</div>
+<div class="section" id="reload-configuration">
+<h3>7.4.6. Reload configuration<a class="headerlink" href="#reload-configuration" title="Permalink to this headline">¶</a></h3>
+<p>After these changes are made, save changes and reload the configuration. The easiest way to do this is to restart the PostgreSQL service.</p>
+<ul class="simple">
+<li>In pgAdmin, right-click the server <strong>PostGIS (localhost:5432)</strong> and select <em>Reload Configuration</em>.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="software-upgrades">
+<span id="upgrades"></span><h2>7.5. Software Upgrades<a class="headerlink" href="#software-upgrades" title="Permalink to this headline">¶</a></h2>
+<p>Because PostGIS resides within PostgreSQL every PostGIS installation actually consists of two versions of software: the PostgreSQL version and the PostGIS version.  As a general principle, each version of PostGIS can be theoretically run within a number of versions of PostgreSQL, and vice versa.</p>
+<p>So, upgrades need to be considered in terms of upgrading each component.</p>
+<div class="section" id="upgrading-postgresql">
+<h3>7.5.1. Upgrading PostgreSQL<a class="headerlink" href="#upgrading-postgresql" title="Permalink to this headline">¶</a></h3>
+<p>There are two kinds of PostgreSQL upgrade scenarios:</p>
+<ul class="simple">
+<li>A “minor upgrade” when the software version increases at the “patch” level. For example, from 8.4.3 to 8.4.4, or from 9.0.1 to 9.0.3. Increases of more than one patch version are just fine. Minor upgrades fix bugs but do not add any new features or change behaviour.</li>
+<li>A “major upgrade” when the “major” or “minor” versions increase. For example, from 8.4.5 to 9.0.0, or from 9.0.5 to 9.1.1. Major upgrades add new features and change behavior.</li>
+</ul>
+<div class="section" id="minor-postgresql-upgrades">
+<h4>7.5.1.1. Minor PostgreSQL Upgrades<a class="headerlink" href="#minor-postgresql-upgrades" title="Permalink to this headline">¶</a></h4>
+<p>For “minor upgrades”, no special process is necessary. Simply install the new software, and re-start the server.</p>
+</div>
+<div class="section" id="major-postgresql-upgrades">
+<h4>7.5.1.2. Major PostgreSQL Upgrades<a class="headerlink" href="#major-postgresql-upgrades" title="Permalink to this headline">¶</a></h4>
+<p>For “major upgrades” there are two ways to carry out the upgrade.</p>
+</div>
+</div>
+<div class="section" id="dump-restore">
+<h3>7.5.2. Dump/Restore<a class="headerlink" href="#dump-restore" title="Permalink to this headline">¶</a></h3>
+<p>Dumping and restoring involves converting all the data to a platform neutral format (text representations) on dump, and back to native representations on restore, so it can be time consuming and CPU intensive. However, if you are migrating to a new architecture or operating system, it’s a required process. It’s also a time-tested and well-understood upgrade path, so if your database is not too big, there’s no reason not to stick with it.</p>
+<ul class="simple">
+<li>Dump your data <code class="docutils literal notranslate"><span class="pre">pg_dumpall</span></code> from the old database.</li>
+<li>Install the new version of PostgreSQL and the same version of PostGIS you are using in your old database. You need to match the PostGIS version so that the dump file function definitions reference an expected version of the PostGIS library.</li>
+<li>Initialize the new data area using the <code class="docutils literal notranslate"><span class="pre">initdb</span></code> program from the new software.</li>
+<li>Start the new server on the new data area.</li>
+<li>Restore the dump file using <code class="docutils literal notranslate"><span class="pre">pg_restore</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="pg-upgrade">
+<h3>7.5.3. pg_upgrade<a class="headerlink" href="#pg-upgrade" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgupgrade.html">pg_upgrade</a> utility allows PostgreSQL data directories to be upgraded without the requirement for a dump/restore step. The utility cannot handle changes to the data files themselves, but handles the more common and frequent changes to system tables that occur in PostgreSQL major upgrades.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The full instructions for running the upgrade process are in the <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgupgrade.html">pg_upgrade</a> web page at the PostgreSQL site.</p>
+</div>
+<p>The <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgupgrade.html">pg_upgrade</a> program expects to have access to both versions of PostgreSQL it is working with, the old and the new version, so you will have to install them both.</p>
+<ul>
+<li><p class="first">Install the new version of PostgreSQL you will be using.</p>
+</li>
+<li><p class="first">Install the same version of PostGIS you are using in the old PostgreSQL into the new PostgreSQL.</p>
+</li>
+<li><p class="first">Initialize the new PostgreSQL data area with the new copy of <code class="docutils literal notranslate"><span class="pre">initdb</span></code>.</p>
+</li>
+<li><p class="first">Ensure both the old and new PostgreSQL servers are turned off.</p>
+</li>
+<li><p class="first">Run <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgupgrade.html">pg_upgrade</a>, making sure to use the binary from the new software installation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_upgrade</span>
+  <span class="o">--</span><span class="n">old</span><span class="o">-</span><span class="n">datadir</span> <span class="s2">&quot;C:/Program Files/PostgreSQL/8.4/data&quot;</span>
+  <span class="o">--</span><span class="n">new</span><span class="o">-</span><span class="n">datadir</span> <span class="s2">&quot;C:/Program Files/PostgreSQL/9.0/data&quot;</span>
+  <span class="o">--</span><span class="n">old</span><span class="o">-</span><span class="n">bindir</span> <span class="s2">&quot;C:/Program Files/PostgreSQL/8.4/bin&quot;</span>
+  <span class="o">--</span><span class="n">new</span><span class="o">-</span><span class="n">bindir</span> <span class="s2">&quot;C:/Program Files/PostgreSQL/9.0/bin&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">If <a class="reference external" href="http://www.postgresql.org/docs/current/static/pgupgrade.html">pg_upgrade</a> generated any <code class="docutils literal notranslate"><span class="pre">.sql</span></code> files, run them now.</p>
+</li>
+<li><p class="first">Start the new server.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="upgrading-postgis">
+<h3>7.5.4. Upgrading PostGIS<a class="headerlink" href="#upgrading-postgis" title="Permalink to this headline">¶</a></h3>
+<p>There are two upgrade scenarios for PostGIS too, but they are slightly different from the PostgreSQL scheme:</p>
+<p>There are two kinds of PostGIS upgrade scenarios:</p>
+<ul class="simple">
+<li>A “minor or patch upgrade” is when the software version increases at the “patch” or “minor” level. For example, from 2.0.1 to 2.0.2, or from 2.0.2 to 2.1.0. Patch upgrades fix bugs only and do not add new features. Minor upgrades fix add new features or change behaviour.</li>
+<li>A “major upgrade” is when the “major” version increases. This is extremely rare. For example, from 0.9.4 to 1.0.0, or from 1.5.4 to 2.0.0. Major upgrades change the on-disk storage format for geometries and require a full database dump and restore.</li>
+</ul>
+<div class="section" id="minor-patch-postgis-upgrades">
+<h4>7.5.4.1. Minor/Patch PostGIS Upgrades<a class="headerlink" href="#minor-patch-postgis-upgrades" title="Permalink to this headline">¶</a></h4>
+<p>PostGIS deals with minor and upgrades through the <code class="docutils literal notranslate"><span class="pre">EXTENSION</span></code> mechanism. If you spatially-enabled your database using <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">EXTENSION</span> <span class="pre">postgis</span></code>, you can update your database using the same functionality.</p>
+<p>First, install the new software so it is available to the database.</p>
+<p>Then, run the SQL to upgrade your PostGIS extension.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- To upgrade to 2.1.2</span>
+<span class="k">ALTER</span> <span class="n">EXTENSION</span> <span class="n">postgis</span> <span class="k">UPDATE</span> <span class="k">TO</span> <span class="s1">&#39;2.1.2&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="major-postgis-upgrades">
+<h3>7.5.5. Major PostGIS Upgrades<a class="headerlink" href="#major-postgis-upgrades" title="Permalink to this headline">¶</a></h3>
+<p>Major upgrades involve changes to the actual data format for the on-disk storage of geometry and geography data. As such, the data tables need to be re-written. The only way to achieve this is to dump (creating a neutral text-based output) and restore (writing the new table format to disk).</p>
+<p>To upgrade, you will have to dump your data first, as discussed in <a class="reference internal" href="#backup"><span class="std std-ref">PostgreSQL Backup and Restore</span></a>.</p>
+<div class="section" id="with-data-in-schemas">
+<h4>7.5.5.1. With Data in Schemas<a class="headerlink" href="#with-data-in-schemas" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p class="first">Dump your data by schema.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_dump</span>
+   <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span>
+   <span class="o">--</span><span class="nb">type</span><span class="o">=</span><span class="n">compressed</span>
+   <span class="o">--</span><span class="n">file</span><span class="o">=</span><span class="n">yourschema</span><span class="o">.</span><span class="n">backup</span>
+   <span class="o">--</span><span class="n">schema</span><span class="o">=</span><span class="n">yourschema</span>
+   <span class="n">yourdatabase</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install the new version of the PostGIS software.</p>
+</li>
+<li><p class="first">Create a new blank database, and enable PostGIS in it.</p>
+</li>
+<li><p class="first">Load your data using pg_restore.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_restore</span>
+  <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span>
+  <span class="o">--</span><span class="nb">type</span><span class="o">=</span><span class="n">compressed</span>
+  <span class="o">--</span><span class="n">dbname</span><span class="o">=</span><span class="n">yournewdatabase</span>
+  <span class="n">yourschema</span><span class="o">.</span><span class="n">backup</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="without-data-in-schemas">
+<h4>7.5.5.2. Without Data in Schemas<a class="headerlink" href="#without-data-in-schemas" title="Permalink to this headline">¶</a></h4>
+<p>In this case you have to dump the whole database, which means the dump file will contain PostGIS function and type signatures, and old ones at that. Before loading that file back into the new database, we strip out all the PostGIS-specific bits using a magic script from the PostGIS distribution.</p>
+<ul>
+<li><p class="first">Dump your whole database, using the “compressed” backup format.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pg_dump</span>
+   <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span>
+   <span class="o">--</span><span class="nb">type</span><span class="o">=</span><span class="n">compressed</span>
+   <span class="o">--</span><span class="n">file</span><span class="o">=</span><span class="n">yourdatabase</span><span class="o">.</span><span class="n">backup</span> <span class="n">yourdatabase</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install the new version of the PostGIS software.</p>
+</li>
+<li><p class="first">Filter your database backup using the ./utils/postgis_restore.pl script from the new version of PostGIS.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postgis_restore</span><span class="o">.</span><span class="n">pl</span> <span class="n">yourdatabase</span><span class="o">.</span><span class="n">backup</span> <span class="o">&gt;</span> <span class="n">yourdatabase</span><span class="o">.</span><span class="n">sql</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create a new blank database, and enable PostGIS in it.</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- New in PostGIS 2+ / PgSQL 9.1+</span>
+<span class="c1">-- Formal extensions replace hand loading sql files!</span>
+<span class="k">CREATE</span> <span class="n">EXTENSION</span> <span class="n">postgis</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Load the filtered data back into the new databaes</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">psql</span>
+   <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">54321</span>
+   <span class="o">--</span><span class="n">file</span><span class="o">=</span><span class="n">yourdatabase</span><span class="o">.</span><span class="n">sql</span>
+   <span class="o">--</span><span class="n">dbname</span><span class="o">=</span><span class="n">yournewdatabase</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>You should now have an upgraded database ready to use.</p>
+</div>
+<div class="section" id="default-srid">
+<h4>7.5.5.3. Default SRID<a class="headerlink" href="#default-srid" title="Permalink to this headline">¶</a></h4>
+<p>For PostGIS 0.X and 1.X, the SRID assigned to geometries created without specifying an SRID was -1.</p>
+<p>For PostGIS 2.X, the SRID assigned to geometries created without specifying an SRID is 0.</p>
+<p>This is only important to client applications calling the ST_SRID() function and testing the result.</p>
+</div>
+<div class="section" id="srid-range-limits">
+<h4>7.5.5.4. SRID Range Limits<a class="headerlink" href="#srid-range-limits" title="Permalink to this headline">¶</a></h4>
+<p>In order to fit the SRID number into a limited address range in the PostgreSQL system tables, the range of values PostGIS 2.X supports for SRID numbers is actually smaller than the range supported in 1.X.</p>
+<p>Legal user-defined SRIDs in PostGIS 2.X are from 1 to 998999. The top 10000 SRIDs are retained by PostGIS for internal use.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="welcome.html">1. Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">2. Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">3. Learning Outcomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">4. Setup Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic.html">5. PostGIS - Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">6. Advanced PostGIS</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Maintenance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#postgresql-security">7.1. PostgreSQL Security</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#postgresql-schemas">7.2. PostgreSQL Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#postgresql-backup-and-restore">7.3. PostgreSQL Backup and Restore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tuning-postgresql-for-spatial">7.4. Tuning PostgreSQL for Spatial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#software-upgrades">7.5. Software Upgrades</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="postgis-functions.html">8. Appendix A: PostGIS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">9. Appendix B: Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">10. Appendix C: License</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="advanced.html"
+                        title="previous chapter">6. Advanced PostGIS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="postgis-functions.html"
+                        title="next chapter">8. Appendix A: PostGIS Functions</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="postgis-functions.html" title="8. Appendix A: PostGIS Functions"
+             >next</a></li>
+        <li class="right" >
+          <a href="advanced.html" title="6. Advanced PostGIS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Introduction to PostGIS</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
