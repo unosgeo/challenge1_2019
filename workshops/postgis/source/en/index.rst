@@ -6,7 +6,7 @@ Introduction to PostGIS
 Getting Started
 ---------------
 
-* This workshop uses a `data bundle <http://s3.cleverelephant.ca/postgis-workshop-2018.zip>`_. Download and extract this data bundle to a convenient location.
+* This workshop is sponsored by the UNOSGEO Challenge 2019 and was done by updating a version of the `Introduction to PostGIS <https://postgis.net/workshops/postgis-intro/>`_ uses a `data bundle <http://s3.cleverelephant.ca/postgis-workshop-2018.zip>`_. Download and extract this data bundle to a convenient location.
   
 * This workshop uses the following software:
   

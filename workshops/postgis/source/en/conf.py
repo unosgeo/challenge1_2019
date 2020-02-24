@@ -20,7 +20,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['rst2pdf.pdfbuilder']
+extensions = []
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [ '' ]
@@ -35,7 +35,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = u'Introduction to PostGIS'
-copyright = u'2019 Mayra Zurbaran and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft'
+copyright = u'2019 Mayra Zurbaran sponsored by the UNOSGEO Challenge and 2015, Paul Ramsey, Boundless | Mark Leslie, LISAsoft'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
