@@ -1,8 +1,8 @@
-# UNOSGEO challenge 2019
+# UN OpenGIS: Introduction to PostGIS
 
-This is the repository for the material for training of PostGIS for the United Nations by the UNOSGEO Challenge 2019.
+This is the repository for the UN OpenGIS PostGIS training material and will be used for training UN staff within Spiral 2 of the UN OpenGIS innitiative. This material has been developed as part of the [UNOSGEO Challenge 2019](https://www.osgeo.org/foundation-news/2019-osgeo-un-committee-educational-challenge/).
 
-The material ready to use is under postgis-workshop-2020 in the form of HTML website of as a PDF document.
+The material is stored in the 'postgis-workshop-2020' folder and can be used as a HTML website or a PDF document.
 
 In order to build the website, run the script with the following command: `perl build_script/build_html_common_git.pl`
 
